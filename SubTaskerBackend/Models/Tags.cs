@@ -14,6 +14,6 @@ namespace SubTaskerBackend.Models
 
         public DateTime? UpdatedAt { get; set; }
 
-        public ICollection<Tasks> Tasks { get; set; } = new List<Tasks>();
+        public ICollection<TaskItems> Tasks { get; set; } = new List<TaskItems>();
     }
 }

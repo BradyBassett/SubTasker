@@ -1,6 +1,6 @@
 namespace SubTaskerBackend.DTOs
 {
-    public class TasksDto
+    public class TaskItemsDto
     {
         public int Id { get; set; }
 
@@ -20,7 +20,7 @@ namespace SubTaskerBackend.DTOs
 
         public int? ParentTaskId { get; set; }
 
-        public List<TasksDto> SubTasks { get; set; } = new List<TasksDto>();
+        public List<TaskItemsDto> SubTasks { get; set; } = new List<TaskItemsDto>();
 
         public int UserId { get; set; }
 
