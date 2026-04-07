@@ -8,7 +8,7 @@ namespace SubTaskerBackend.Models
 
         public int UserId { get; set; }
 
-        public Users user { get; set; } = null!;
+        public Users User { get; set; } = null!;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

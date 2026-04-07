@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SubTaskerBackend.Data;
@@ -11,9 +12,11 @@ using SubTaskerBackend.Data;
 namespace SubTaskerBackend.Migrations
 {
     [DbContext(typeof(SubTaskerEfCoreDbContext))]
-    partial class SubTaskerEfCoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260407193751_FixJoinTableName")]
+    partial class FixJoinTableName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -188,7 +191,7 @@ namespace SubTaskerBackend.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("TaskItemsTags", b =>
+            modelBuilder.Entity("TaskTags", b =>
                 {
                     b.Property<int>("TaskId")
                         .HasColumnType("integer");
@@ -200,7 +203,7 @@ namespace SubTaskerBackend.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("TaskItemsTags", (string)null);
+                    b.ToTable("TaskTags", (string)null);
                 });
 
             modelBuilder.Entity("SubTaskerBackend.Models.Categories", b =>
@@ -250,7 +253,7 @@ namespace SubTaskerBackend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TaskItemsTags", b =>
+            modelBuilder.Entity("TaskTags", b =>
                 {
                     b.HasOne("SubTaskerBackend.Models.Tags", null)
                         .WithMany()
