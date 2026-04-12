@@ -16,11 +16,11 @@ namespace SubTaskerBackend.DTOs
 
         public int? CategoryId { get; set; }
 
-        public List<int> TagIds { get; set; } = new List<int>();
+        public IReadOnlyCollection<int> TagIds { get; set; } = new List<int>();
 
         public int? ParentTaskId { get; set; }
 
-        public List<TaskItemsDto> SubTasks { get; set; } = new List<TaskItemsDto>();
+        public IReadOnlyCollection<TaskItemsDto> SubTasks { get; set; } = new List<TaskItemsDto>();
 
         public int UserId { get; set; }
 
