@@ -5,9 +5,9 @@ namespace SubTaskerBackend.Mappers
 {
 	public static class TagsMapper
 	{
-		public static TagsDto ToDto(this Tags tag)
+		public static ReadTagsDto ToDto(this Tags tag)
 		{
-			return new TagsDto
+			return new ReadTagsDto
 			{
 				Id = tag.Id,
 				Name = tag.Name,
@@ -17,7 +17,7 @@ namespace SubTaskerBackend.Mappers
 			};
 		}
 
-		public static IReadOnlyCollection<TagsDto> ToDtoList(this IEnumerable<Tags> tags)
+		public static IReadOnlyCollection<ReadTagsDto> ToDtoList(this IEnumerable<Tags> tags)
 		{
 			return tags.Select(tag => tag.ToDto()).ToList();
 		}

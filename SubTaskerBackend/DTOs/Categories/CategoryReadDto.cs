@@ -1,6 +1,6 @@
-namespace SubTaskerBackend.DTOs
+namespace SubTaskerBackend.DTOs.Categories
 {
-    public class TagsDto
+    public class CategoryReadDto
     {
         public int Id { get; set; }
 
@@ -11,7 +11,5 @@ namespace SubTaskerBackend.DTOs
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
-
-        public List<int> TaskIds { get; set; } = new List<int>();
     }
 }

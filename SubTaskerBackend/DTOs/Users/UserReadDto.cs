@@ -1,6 +1,6 @@
-namespace SubTaskerBackend.DTOs
+namespace SubTaskerBackend.DTOs.Users
 {
-    public class UsersDto
+    public class UserReadDto
     {
         public int Id { get; set; }
 

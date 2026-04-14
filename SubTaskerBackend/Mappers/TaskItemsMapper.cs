@@ -5,9 +5,9 @@ namespace SubTaskerBackend.Mappers
 {
 	public static class TaskItemsMapper
 	{
-		public static TaskItemsDto ToDto(this TaskItems taskItem)
+		public static ReadTaskItemsDto ToDto(this TaskItems taskItem)
 		{
-			return new TaskItemsDto
+			return new ReadTaskItemsDto
 			{
 				Id = taskItem.Id,
 				Title = taskItem.Title,
@@ -25,7 +25,7 @@ namespace SubTaskerBackend.Mappers
 			};
 		}
 
-		public static IReadOnlyCollection<TaskItemsDto> ToDtoList(this IEnumerable<TaskItems> taskItems)
+		public static IReadOnlyCollection<ReadTaskItemsDto> ToDtoList(this IEnumerable<TaskItems> taskItems)
 		{
 			return taskItems.Select(taskItem => taskItem.ToDto()).ToList();
 		}
