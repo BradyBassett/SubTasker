@@ -1,13 +1,13 @@
-using SubTaskerBackend.DTOs;
+using SubTaskerBackend.DTOs.Users;
 using SubTaskerBackend.Models;
 
 namespace SubTaskerBackend.Mappers
 {
-	public static class UsersMapper
+	public static class UserMapper
 	{
-		public static ReadUsersDto ToDto(this Users user)
+		public static UserReadDto ToDto(this User user)
 		{
-			return new ReadUsersDto
+			return new UserReadDto
 			{
 				Id = user.Id,
 				Username = user.Username,
@@ -17,7 +17,7 @@ namespace SubTaskerBackend.Mappers
 			};
 		}
 
-		public static IReadOnlyCollection<ReadUsersDto> ToDtoList(this IEnumerable<Users> users)
+		public static IReadOnlyCollection<UserReadDto> ToDtoList(this IEnumerable<User> users)
 		{
 			return users.Select(user => user.ToDto()).ToList();
 		}

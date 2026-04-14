@@ -1,13 +1,13 @@
-using SubTaskerBackend.DTOs;
+using SubTaskerBackend.DTOs.TaskItems;
 using SubTaskerBackend.Models;
 
 namespace SubTaskerBackend.Mappers
 {
-	public static class TaskItemsMapper
+	public static class TaskItemMapper
 	{
-		public static ReadTaskItemsDto ToDto(this TaskItems taskItem)
+		public static TaskItemReadDto ToDto(this TaskItem taskItem)
 		{
-			return new ReadTaskItemsDto
+			return new TaskItemReadDto
 			{
 				Id = taskItem.Id,
 				Title = taskItem.Title,
@@ -25,7 +25,7 @@ namespace SubTaskerBackend.Mappers
 			};
 		}
 
-		public static IReadOnlyCollection<ReadTaskItemsDto> ToDtoList(this IEnumerable<TaskItems> taskItems)
+		public static IReadOnlyCollection<TaskItemReadDto> ToDtoList(this IEnumerable<TaskItem> taskItems)
 		{
 			return taskItems.Select(taskItem => taskItem.ToDto()).ToList();
 		}

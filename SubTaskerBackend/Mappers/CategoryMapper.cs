@@ -1,11 +1,11 @@
 using SubTaskerBackend.Models;
-using SubTaskerBackend.DTOs;
+using SubTaskerBackend.DTOs.Categories;
 
 namespace SubTaskerBackend.Mappers
 {
-	public static class CategoriesMapper
+	public static class CategoryMapper
 	{
-		public static CategoryReadDto ToDto(this Categories category)
+		public static CategoryReadDto ToDto(this Category category)
 		{
 			return new CategoryReadDto
 			{
@@ -17,7 +17,7 @@ namespace SubTaskerBackend.Mappers
 			};
 		}
 
-		public static IReadOnlyCollection<CategoryReadDto> ToDtoList(this IEnumerable<Categories> categories)
+		public static IReadOnlyCollection<CategoryReadDto> ToDtoList(this IEnumerable<Category> categories)
 		{
 			return categories.Select(category => category.ToDto()).ToList();
 		}

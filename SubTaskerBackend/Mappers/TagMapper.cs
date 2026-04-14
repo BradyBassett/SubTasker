@@ -1,13 +1,13 @@
-using SubTaskerBackend.DTOs;
+using SubTaskerBackend.DTOs.Tags;
 using SubTaskerBackend.Models;
 
 namespace SubTaskerBackend.Mappers
 {
-	public static class TagsMapper
+	public static class TagMapper
 	{
-		public static ReadTagsDto ToDto(this Tags tag)
+		public static TagReadDto ToDto(this Tag tag)
 		{
-			return new ReadTagsDto
+			return new TagReadDto
 			{
 				Id = tag.Id,
 				Name = tag.Name,
@@ -17,7 +17,7 @@ namespace SubTaskerBackend.Mappers
 			};
 		}
 
-		public static IReadOnlyCollection<ReadTagsDto> ToDtoList(this IEnumerable<Tags> tags)
+		public static IReadOnlyCollection<TagReadDto> ToDtoList(this IEnumerable<Tag> tags)
 		{
 			return tags.Select(tag => tag.ToDto()).ToList();
 		}

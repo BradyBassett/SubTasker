@@ -3,7 +3,7 @@ using TaskStatus = SubTaskerBackend.Enums.TaskStatus;
 
 namespace SubTaskerBackend.Models
 {
-    public class TaskItems
+    public class TaskItem
     {
         public int Id { get; set; }
         public string Title { get; set; } = null!;
@@ -17,19 +17,19 @@ namespace SubTaskerBackend.Models
 
         public int? CategoryId { get; set; }
 
-        public Categories? Category { get; set; }
+        public Category? Category { get; set; }
 
-        public ICollection<Tags> Tags { get; set; } = new List<Tags>();
+        public ICollection<Tag> Tags { get; set; } = new List<Tag>();
 
         public int? ParentTaskId { get; set; }
 
-        public TaskItems? ParentTask { get; set; }
+        public TaskItem? ParentTask { get; set; }
 
-        public ICollection<TaskItems> SubTasks { get; set; } = new List<TaskItems>();
+        public ICollection<TaskItem> SubTasks { get; set; } = new List<TaskItem>();
 
         public int UserId { get; set; }
 
-        public Users User { get; set; } = null!;
+        public User User { get; set; } = null!;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

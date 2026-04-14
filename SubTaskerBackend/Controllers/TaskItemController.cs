@@ -8,7 +8,7 @@ namespace SubTaskerBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UsersController : ControllerBase
+    public class TaskItemController : ControllerBase
     {
         
     }

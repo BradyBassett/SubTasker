@@ -11,17 +11,17 @@ namespace SubTaskerBackend.Data
         {
         }
 
-        public DbSet<TaskItems> TaskItems { get; set; } = null!;
-        public DbSet<Categories> Categories { get; set; } = null!;
-        public DbSet<Tags> Tags { get; set; } = null!;
-        public DbSet<Users> Users { get; set; } = null!;
+        public DbSet<TaskItem> TaskItems { get; set; } = null!;
+        public DbSet<Category> Categories { get; set; } = null!;
+        public DbSet<Tag> Tags { get; set; } = null!;
+        public DbSet<User> Users { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             // Configure the Users entity
-            modelBuilder.Entity<Users>(entity =>
+            modelBuilder.Entity<User>(entity =>
             {
                 entity.Property(e => e.Username)
                     .HasMaxLength(50)
@@ -51,7 +51,7 @@ namespace SubTaskerBackend.Data
             });
 
             // Configure the Categories entity
-            modelBuilder.Entity<Categories>(entity =>
+            modelBuilder.Entity<Category>(entity =>
             {
                 entity.Property(e => e.Name)
                     .HasMaxLength(100)
@@ -78,7 +78,7 @@ namespace SubTaskerBackend.Data
             });
 
             // Configure the Tags entity
-            modelBuilder.Entity<Tags>(entity =>
+            modelBuilder.Entity<Tag>(entity =>
             {
                 entity.Property(e => e.Name)
                     .HasMaxLength(50)
@@ -105,7 +105,7 @@ namespace SubTaskerBackend.Data
             });
 
             // Configure the TaskItems entity
-            modelBuilder.Entity<TaskItems>(entity =>
+            modelBuilder.Entity<TaskItem>(entity =>
             {
                 entity.Property(e => e.Title)
                     .HasMaxLength(100)
@@ -150,12 +150,12 @@ namespace SubTaskerBackend.Data
                     .UsingEntity<Dictionary<string, object>>(
                         "TaskItemsTags",
                         j => j
-                            .HasOne<Tags>()
+                            .HasOne<Tag>()
                             .WithMany()
                             .HasForeignKey("TagId")
                             .OnDelete(DeleteBehavior.Cascade),
                         j => j
-                            .HasOne<TaskItems>()
+                            .HasOne<TaskItem>()
                             .WithMany()
                             .HasForeignKey("TaskId")
                             .OnDelete(DeleteBehavior.Cascade),
