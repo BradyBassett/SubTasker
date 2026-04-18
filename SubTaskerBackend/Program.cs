@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using SubTaskerBackend.Data;
+using SubTaskerBackend.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +19,14 @@ builder.Services
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+    builder.Services.AddProblemDetails();
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 var app = builder.Build();
+
+app.UseExceptionHandler();
+
+app.MapControllers();
 
 app.MapGet("/", () => "Hello World!");
 
