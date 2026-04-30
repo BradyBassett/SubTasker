@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SubTaskerBackend.Data;
 using SubTaskerBackend.Exceptions;
+using SubTaskerBackend.Services;
+using Microsoft.AspNetCore.Identity;
+using SubTaskerBackend.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,19 +30,23 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = builder.Configuration["Auth:Issuer"];
-        options.Audience = builder.Configuration["Auth:Audience"];
-
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Auth:Issuer"] ?? throw new InvalidOperationException("Auth:Issuer is not configured."),
             ValidateAudience = true,
+            ValidAudience = builder.Configuration["Auth:Audience"] ?? throw new InvalidOperationException("Auth:Audience is not configured."),
             ValidateLifetime = true,
-            ValidateIssuerSigningKey = true
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Auth:SigningKey"] ?? throw new InvalidOperationException("Auth:SigningKey is not configured."))),
         };
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddScoped<IPasswordHasher<User>>();
 
 var app = builder.Build();
 
