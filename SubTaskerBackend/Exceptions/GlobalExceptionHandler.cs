@@ -26,15 +26,38 @@ namespace SubTaskerBackend.Exceptions
                 return true; // Considered handled since client is gone
             }
 
+            if (exception is HttpException authException)
+            {
+                _logger.LogWarning(exception, "Authentication error occurred. TraceId: {TraceId}", traceId);
+
+                return await WriteErrorResponseAsync(
+                    context,
+                    authException.StatusCode,
+                    "Authentication Error",
+                    authException.Message,
+                    traceId
+                );
+            }
+
             // Log the exception details
             _logger.LogError(exception, "An unhandled exception occurred. TraceId: {TraceId}", traceId);
 
-            // ProblemDetails response
+            return await WriteErrorResponseAsync(
+                context,
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred.",
+                "Please try again later or contact support if the issue persists.",
+                traceId
+            );
+        }
+
+        private async Task<bool> WriteErrorResponseAsync(HttpContext context, int statusCode, string title, string detail, string traceId)
+        {
             var problemDetails = new ProblemDetails
             {
-                Status = StatusCodes.Status500InternalServerError,
-                Title = "An unexpected error occurred.",
-                Detail = "Please try again later or contact support if the issue persists.",
+                Status = statusCode,
+                Title = title,
+                Detail = detail,
                 Instance = context.Request.Path
             };
 
@@ -43,11 +66,9 @@ namespace SubTaskerBackend.Exceptions
             await _problemDetailsService.WriteAsync(new ProblemDetailsContext
             {
                 HttpContext = context,
-                Exception = exception,
                 ProblemDetails = problemDetails
             });
 
-            // return true when handled, false otherwise
             return true;
         }
     }
