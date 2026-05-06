@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SubTaskerBackend.DTOs.Users;
 using SubTaskerBackend.Mappers;
@@ -17,18 +18,27 @@ namespace SubTaskerBackend.Controllers
             _authService = authService;
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register(UserCreateDto userCreateDto)
         {
             User user = await _authService.RegisterAsync(userCreateDto);
 
-            return Created("", user.ToDto());
+            return CreatedAtAction(
+                nameof(UserController.GetUserById),
+                "User",
+                new { id = user.Id },
+                user.ToDto()
+            );
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserLoginDto loginDto)
         {
-            throw new NotImplementedException();
+            string token = await _authService.LoginAsync(loginDto);
+
+            return Ok(new LoginResponseDto { Token = token });
         }
     }
 }

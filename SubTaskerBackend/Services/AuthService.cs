@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SubTaskerBackend.Data;
 using SubTaskerBackend.DTOs.Users;
+using SubTaskerBackend.Exceptions;
 using SubTaskerBackend.Models;
 
 namespace SubTaskerBackend.Services
@@ -58,17 +59,17 @@ namespace SubTaskerBackend.Services
         {
             if (userCreateDto.Password != userCreateDto.ConfirmPassword)
             {
-                throw new InvalidOperationException("Passwords do not match.");
+                throw new ConflictException("Passwords do not match.");
             }
 
             if (await _dbContext.Users.AnyAsync(u => u.Email == userCreateDto.Email))
             {
-                throw new InvalidOperationException("Email is already in use.");
+                throw new ConflictException("Email is already in use.");
             }
 
             if (await _dbContext.Users.AnyAsync(u => u.Username == userCreateDto.Username))
             {
-                throw new InvalidOperationException("Username is already in use.");
+                throw new ConflictException("Username is already in use.");
             }
 
             User user = new User
@@ -86,7 +87,28 @@ namespace SubTaskerBackend.Services
         }
 
         // Login User
+        public async Task<string> LoginAsync(UserLoginDto loginDto)
+        {
+            User? user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            if (user == null)
+            {
+                throw new UnauthorizedException("Invalid email or password.");
+            }
 
-        // Get Current User
+            PasswordVerificationResult result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, loginDto.Password);
+            if (result == PasswordVerificationResult.Failed)
+            {
+                throw new UnauthorizedException("Invalid email or password.");
+            }
+
+            if(result == PasswordVerificationResult.SuccessRehashNeeded)
+            {
+                user.PasswordHash = _passwordHasher.HashPassword(user, loginDto.Password);
+                _dbContext.Users.Update(user);
+                await _dbContext.SaveChangesAsync();
+            }
+
+            return CreateToken(user);
+        }
     }
 }

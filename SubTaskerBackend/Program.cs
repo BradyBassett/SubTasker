@@ -46,7 +46,11 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<AuthService>();
 
-builder.Services.AddScoped<IPasswordHasher<User>>();
+builder.Services.AddScoped<UserService>();
+
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+
+builder.Services.AddHttpContextAccessor();
 
 WebApplication app = builder.Build();
 

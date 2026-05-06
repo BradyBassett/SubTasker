@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using SubTaskerBackend.Mappers;
+using SubTaskerBackend.Models;
+using SubTaskerBackend.Services;
 
 namespace SubTaskerBackend.Controllers
 {
@@ -6,6 +9,27 @@ namespace SubTaskerBackend.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        
+        private readonly UserService _userService;
+
+        public UserController(UserService userService)
+        {
+            _userService = userService;
+        }
+
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            User user = await _userService.GetCurrentUserAsync();
+
+            return Ok(user.ToDto());
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUserById(int id)
+        {
+            User user = await _userService.GetUserByIdAsync(id);
+
+            return Ok(user.ToDto());
+        }
     }
 }
