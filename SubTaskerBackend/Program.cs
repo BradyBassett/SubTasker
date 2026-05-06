@@ -8,7 +8,7 @@ using SubTaskerBackend.Services;
 using Microsoft.AspNetCore.Identity;
 using SubTaskerBackend.Models;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services
@@ -48,7 +48,7 @@ builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddScoped<IPasswordHasher<User>>();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 app.UseExceptionHandler();
 

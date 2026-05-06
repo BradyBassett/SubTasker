@@ -16,7 +16,7 @@ namespace SubTaskerBackend.Exceptions
 
         public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
         {
-            var traceId = context.TraceIdentifier;
+            string traceId = context.TraceIdentifier;
 
             // If client disconnects, skip response
             if (cancellationToken.IsCancellationRequested || context.RequestAborted.IsCancellationRequested)
@@ -53,7 +53,7 @@ namespace SubTaskerBackend.Exceptions
 
         private async Task<bool> WriteErrorResponseAsync(HttpContext context, int statusCode, string title, string detail, string traceId)
         {
-            var problemDetails = new ProblemDetails
+            ProblemDetails problemDetails = new ProblemDetails
             {
                 Status = statusCode,
                 Title = title,
