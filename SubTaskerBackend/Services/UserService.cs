@@ -1,11 +1,12 @@
 using SubTaskerBackend.Data;
 using SubTaskerBackend.Exceptions;
+using SubTaskerBackend.Interfaces;
 using SubTaskerBackend.Models;
 
 namespace SubTaskerBackend.Services
 {
 
-    public class UserService
+    public class UserService : IUserService
     {
         private readonly SubTaskerEfCoreDbContext _dbContext;
         private readonly IHttpContextAccessor _httpContextAccessor;

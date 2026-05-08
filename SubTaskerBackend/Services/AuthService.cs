@@ -6,11 +6,12 @@ using Microsoft.IdentityModel.Tokens;
 using SubTaskerBackend.Data;
 using SubTaskerBackend.DTOs.Users;
 using SubTaskerBackend.Exceptions;
+using SubTaskerBackend.Interfaces;
 using SubTaskerBackend.Models;
 
 namespace SubTaskerBackend.Services
 {
-    public class AuthService
+    public class AuthService : IAuthService
     {
         private readonly IConfiguration _configuration;
         private readonly SubTaskerEfCoreDbContext _dbContext;
