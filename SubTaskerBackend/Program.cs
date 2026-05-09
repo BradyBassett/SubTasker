@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using SubTaskerBackend.Data;
 using SubTaskerBackend.Exceptions;
 using SubTaskerBackend.Services;
+using SubTaskerBackend.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using SubTaskerBackend.Models;
 
@@ -44,9 +45,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
-builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
