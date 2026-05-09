@@ -1,6 +1,3 @@
-using SubTaskerBackend.Enums;
-using TaskStatus = SubTaskerBackend.Enums.TaskStatus;
-
 namespace SubTaskerBackend.Models
 {
     public class TaskItem
@@ -9,9 +6,9 @@ namespace SubTaskerBackend.Models
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
 
-        public TaskStatus Status { get; set; } = TaskStatus.notStarted;
+        public Enums.TaskStatus Status { get; set; } = Enums.TaskStatus.notStarted;
 
-        public PriorityLevel Priority { get; set; } = PriorityLevel.Medium;
+        public Enums.PriorityLevel Priority { get; set; } = Enums.PriorityLevel.Medium;
 
         public DateTime? DueDate { get; set; }
 
