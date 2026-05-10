@@ -53,6 +53,8 @@ namespace SubTaskerBackend.Exceptions
 
         private async Task<bool> WriteErrorResponseAsync(HttpContext context, int statusCode, string title, string detail, string traceId)
         {
+            context.Response.StatusCode = statusCode;
+
             ProblemDetails problemDetails = new ProblemDetails
             {
                 Status = statusCode,

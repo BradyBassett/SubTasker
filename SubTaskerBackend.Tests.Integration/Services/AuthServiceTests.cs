@@ -179,8 +179,6 @@ public class AuthServiceTests : IClassFixture<PostgresFixture>, IAsyncLifetime
         await Assert.ThrowsAsync<UnauthorizedException>(() => _authService.LoginAsync(userLoginDto));
     }
 
-    
-
     private async Task SeedTestUserAsync()
     {
         var userCreateDto = new UserCreateDto

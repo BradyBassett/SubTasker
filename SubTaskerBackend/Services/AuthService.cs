@@ -26,8 +26,8 @@ namespace SubTaskerBackend.Services
 
         public string CreateToken(User user)
         {
-			// not strictly necessary to validate these here since the app won't start without them, but it doesn't hurt to be defensive
-			string issuer = _configuration["Auth:Issuer"] ?? throw new InvalidOperationException("Auth:Issuer is not configured.");
+            // not strictly necessary to validate these here since the app won't start without them, but it doesn't hurt to be defensive
+            string issuer = _configuration["Auth:Issuer"] ?? throw new InvalidOperationException("Auth:Issuer is not configured.");
             string audience = _configuration["Auth:Audience"] ?? throw new InvalidOperationException("Auth:Audience is not configured.");
             string signingKey = _configuration["Auth:SigningKey"] ?? throw new InvalidOperationException("Auth:SigningKey is not configured.");
 
