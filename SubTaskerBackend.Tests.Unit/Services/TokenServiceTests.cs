@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace SubTaskerBackend.Tests.Unit.Services
 {
-    public class AuthServiceTests
+    public class TokenServiceTests
     {
         [Fact]
         public void CreateToken_WithValidUser_ShouldReturnToken()
@@ -18,14 +18,20 @@ namespace SubTaskerBackend.Tests.Unit.Services
                 PasswordHash = "hashedpassword"
             };
 
-            var config = new Mock<IConfiguration>();
-            config.Setup(c => c["Auth:Issuer"]).Returns("https://test-issuer.com");
-            config.Setup(c => c["Auth:Audience"]).Returns("https://test-audience.com");
-            config.Setup(c => c["Auth:SigningKey"]).Returns("supersecrettestkey123456789012345678");
+            var configValues = new Dictionary<string, string?>
+            {
+                ["Auth:Issuer"] = "https://test-issuer.com",
+                ["Auth:Audience"] = "https://test-audience.com",
+                ["Auth:SigningKey"] = "supersecrettestkey123456789012345678"
+            };
 
-            var authService = new AuthService(config.Object, null!, null!);
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(configValues)
+                .Build();
 
-            string token = authService.CreateToken(user);
+            var tokenService = new TokenService(config);
+
+            string token = tokenService.CreateToken(user);
 
             var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
             var jwtToken = tokenHandler.ReadJwtToken(token);

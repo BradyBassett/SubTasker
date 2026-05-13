@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using SubTaskerBackend.DTOs.Users;
 using SubTaskerBackend.Models;
 using SubTaskerBackend.Tests.Api.Fixtures;
+using SubTaskerBackend.Tests.Api.Helpers;
 
 namespace SubTaskerBackend.Tests.Api
 {
@@ -56,7 +57,7 @@ namespace SubTaskerBackend.Tests.Api
         [InlineData("otheruser", "testuser@example.com", "Password123!", "Password123!")] // duplicate email
         public async Task Register_WithInvalidData_Returns409Conflict(string username, string email, string password, string confirmPassword)
         {
-            await SeedTestUserAsync("testuser", "testuser@example.com", "Password123!");
+            await ApiTestDataHelper.SeedTestUserAsync("testuser", "testuser@example.com", "Password123!", _factory);
 
             var userCreateDto = new UserCreateDto
             {
@@ -74,7 +75,7 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task Register_WithDuplicateEmail_Returns409ConflictProblemDetails()
         {
-            await SeedTestUserAsync("testuser", "testuser@example.com", "Password123!");
+            await ApiTestDataHelper.SeedTestUserAsync("testuser", "testuser@example.com", "Password123!", _factory);
 
             var userCreateDto = new UserCreateDto
             {
@@ -154,7 +155,7 @@ namespace SubTaskerBackend.Tests.Api
                 Password = "Password123!"
             };
 
-            await SeedTestUserAsync("testuser", loginDto.Email, loginDto.Password);
+            await ApiTestDataHelper.SeedTestUserAsync("testuser", loginDto.Email, loginDto.Password, _factory);
 
             var response = await _client.PostAsJsonAsync("/api/auth/login", loginDto);
             var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
@@ -181,7 +182,7 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task Login_WithInvalidPassword_Returns401Unauthorized()
         {
-            await SeedTestUserAsync("testuser", "testuser@example.com", "Password123!");
+            await ApiTestDataHelper.SeedTestUserAsync("testuser", "testuser@example.com", "Password123!", _factory);
 
             var loginDto = new UserLoginDto
             {
@@ -253,24 +254,6 @@ namespace SubTaskerBackend.Tests.Api
             Assert.Equal(System.Net.HttpStatusCode.OK, loginResponse.StatusCode);
             Assert.NotNull(loginResult);
             Assert.False(string.IsNullOrEmpty(loginResult.Token));
-        }
-
-        private async Task SeedTestUserAsync(string username, string email, string password)
-        {
-            var dbContext = _factory.CreateDbContext();
-            await using var _ = dbContext;
-
-            User user = new User
-            {
-                Username = username,
-                Email = email,
-            };
-
-            user.PasswordHash = new PasswordHasher<User>().HashPassword(user, password);
-
-            dbContext.Users.Add(user);
-
-            await dbContext.SaveChangesAsync();
         }
     }
 }

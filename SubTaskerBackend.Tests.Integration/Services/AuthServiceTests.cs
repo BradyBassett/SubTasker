@@ -41,7 +41,8 @@ public class AuthServiceTests : IClassFixture<PostgresFixture>, IAsyncLifetime
 
         _dbContext = _postgresFixture.CreateDbContext();
         _passwordHasher = new PasswordHasher<User>();
-        _authService = new AuthService(_configuration, _dbContext, _passwordHasher);
+        var tokenService = new TokenService(_configuration);
+        _authService = new AuthService(_dbContext, _passwordHasher, tokenService);
     }
 
     public async Task DisposeAsync()
