@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using SubTaskerBackend.DTOs.Users;
 using SubTaskerBackend.Models;
@@ -68,7 +69,29 @@ namespace SubTaskerBackend.Tests.Api
             var response = await _client.PostAsJsonAsync("/api/auth/register", userCreateDto);
 
             Assert.Equal(System.Net.HttpStatusCode.Conflict, response.StatusCode);
-            // Optionally, you can also check the error message in the response content
+        }
+
+        [Fact]
+        public async Task Register_WithDuplicateEmail_Returns409ConflictProblemDetails()
+        {
+            await SeedTestUserAsync("testuser", "testuser@example.com", "Password123!");
+
+            var userCreateDto = new UserCreateDto
+            {
+                Username = "otheruser",
+                Email = "testuser@example.com",
+                Password = "Password123!",
+                ConfirmPassword = "Password123!"
+            };
+
+            var response = await _client.PostAsJsonAsync("/api/auth/register", userCreateDto);
+            var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+
+            Assert.Equal(System.Net.HttpStatusCode.Conflict, response.StatusCode);
+            Assert.NotNull(problemDetails);
+            Assert.Equal(409, problemDetails.Status);
+            Assert.Equal("Authentication Error", problemDetails.Title);
+            Assert.Equal("Email is already in use.", problemDetails.Detail);
         }
 
         [Theory]
@@ -100,6 +123,26 @@ namespace SubTaskerBackend.Tests.Api
             var response = await _client.PostAsJsonAsync("/api/auth/register", userCreateDto);
 
             Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Register_WithInvalidEmailFormat_Returns400BadRequestValidationProblemDetails()
+        {
+            var userCreateDto = new UserCreateDto
+            {
+                Username = "testuser",
+                Email = "invalid-email",
+                Password = "Password123!",
+                ConfirmPassword = "Password123!"
+            };
+
+            var response = await _client.PostAsJsonAsync("/api/auth/register", userCreateDto);
+            var validationProblemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+
+            Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.NotNull(validationProblemDetails);
+            Assert.Equal(400, validationProblemDetails.Status);
+            Assert.Contains(nameof(UserCreateDto.Email), validationProblemDetails.Errors.Keys);
         }
 
         [Fact]
@@ -147,8 +190,13 @@ namespace SubTaskerBackend.Tests.Api
             };
 
             var response = await _client.PostAsJsonAsync("/api/auth/login", loginDto);
+            var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
 
             Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+            Assert.NotNull(problemDetails);
+            Assert.Equal(401, problemDetails.Status);
+            Assert.Equal("Authentication Error", problemDetails.Title);
+            Assert.Equal("Invalid email or password.", problemDetails.Detail);
         }
 
         [Theory]
