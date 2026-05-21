@@ -95,7 +95,6 @@ namespace SubTaskerBackend.Services
                 throw new ConflictException("A category with the same name already exists.");
             }
 
-            _dbContext.Categories.Update(category);
             await _dbContext.SaveChangesAsync();
 
             return category;
