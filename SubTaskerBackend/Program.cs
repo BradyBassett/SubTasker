@@ -8,6 +8,7 @@ using SubTaskerBackend.Services;
 using SubTaskerBackend.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using SubTaskerBackend.Models;
+using Microsoft.AspNetCore.Authorization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -43,7 +44,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 
