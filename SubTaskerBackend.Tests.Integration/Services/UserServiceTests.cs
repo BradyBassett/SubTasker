@@ -96,6 +96,7 @@ namespace SubTaskerBackend.Tests.Integration.Services
         public async Task GetUserByIdAsync_WithExistingId_ReturnsUser()
         {
             User seededUser = await SeedTestUserAsync();
+            SetHttpContextUser(seededUser.Id);
 
             User result = await _userService.GetUserByIdAsync(seededUser.Id);
 
@@ -108,7 +109,30 @@ namespace SubTaskerBackend.Tests.Integration.Services
         [Fact]
         public async Task GetUserByIdAsync_WithMissingId_ThrowsNotFoundException()
         {
+            User seededUser = await SeedTestUserAsync();
+            SetHttpContextUser(seededUser.Id);
+
             await Assert.ThrowsAsync<NotFoundException>(() => _userService.GetUserByIdAsync(9999));
+        }
+
+        [Fact]
+        public async Task GetUserByIdAsync_WithDifferentAuthenticatedUser_ThrowsNotFoundException()
+        {
+            User seededUser = await SeedTestUserAsync();
+
+            var otherUser = new User
+            {
+                Username = "otheruser",
+                Email = "otheruser@mail.com",
+                PasswordHash = "somehash"
+            };
+
+            _dbContext.Users.Add(otherUser);
+            await _dbContext.SaveChangesAsync();
+
+            SetHttpContextUser(otherUser.Id);
+
+            await Assert.ThrowsAsync<NotFoundException>(() => _userService.GetUserByIdAsync(seededUser.Id));
         }
 
         private void SetHttpContextUser(int userId)
