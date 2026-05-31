@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Identity;
 using SubTaskerBackend.Models;
-using SubTaskerBackend.Services;
 using SubTaskerBackend.Tests.Api.Fixtures;
 
 namespace SubTaskerBackend.Tests.Api.Helpers
 {
     public static class ApiTestDataHelper
     {
-        public static async Task SeedTestUserAsync(string username, string email, string password, ApiTestFactory factory)
+        public static async Task<User> SeedTestUserAsync(string username, string email, string password, ApiTestFactory factory)
         {
             var dbContext = factory.CreateDbContext();
             await using var _ = dbContext;
@@ -23,13 +22,13 @@ namespace SubTaskerBackend.Tests.Api.Helpers
             dbContext.Users.Add(user);
 
             await dbContext.SaveChangesAsync();
+
+            return user;
         }
 
-        public static async Task SeedAuthenticatedUserAsync(string username, string email, string password, ApiTestFactory factory)
+        public static async Task<User> SeedAuthenticatedUserAsync(string username, string email, string password, ApiTestFactory factory)
         {
-            await SeedTestUserAsync(username, email, password, factory);
-
-
+            return await SeedTestUserAsync(username, email, password, factory);
         }
     }
 }
