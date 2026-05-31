@@ -26,6 +26,7 @@ namespace SubTaskerBackend.Services
             int userId = ClaimHelper.GetUserIdFromClaims(_httpContextAccessor);
 
             List<Tag> tags = await _dbContext.Tags
+                .Include(t => t.Tasks)
                 .Where(t => t.UserId == userId)
                 .OrderBy(t => t.Name)
                 .ToListAsync();
@@ -37,7 +38,9 @@ namespace SubTaskerBackend.Services
         {
             int userId = ClaimHelper.GetUserIdFromClaims(_httpContextAccessor);
 
-            Tag? tag = await _dbContext.Tags.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+            Tag? tag = await _dbContext.Tags
+                .Include(t => t.Tasks)
+                .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
 
             if (tag == null)
             {

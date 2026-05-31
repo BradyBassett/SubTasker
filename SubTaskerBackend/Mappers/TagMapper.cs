@@ -13,7 +13,8 @@ namespace SubTaskerBackend.Mappers
 				Name = tag.Name,
 				UserId = tag.UserId,
 				CreatedAt = tag.CreatedAt,
-				UpdatedAt = tag.UpdatedAt
+				UpdatedAt = tag.UpdatedAt,
+				TaskIds = tag.Tasks.Select(task => task.Id).ToList()
 			};
 		}
 
