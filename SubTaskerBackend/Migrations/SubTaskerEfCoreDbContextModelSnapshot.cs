@@ -22,7 +22,7 @@ namespace SubTaskerBackend.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("SubTaskerBackend.Models.Categories", b =>
+            modelBuilder.Entity("SubTaskerBackend.Models.Category", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -48,15 +48,13 @@ namespace SubTaskerBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
+                    b.HasIndex("UserId", "Name")
                         .IsUnique();
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("SubTaskerBackend.Models.Tags", b =>
+            modelBuilder.Entity("SubTaskerBackend.Models.Tag", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -82,15 +80,13 @@ namespace SubTaskerBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
+                    b.HasIndex("UserId", "Name")
                         .IsUnique();
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("SubTaskerBackend.Models.TaskItems", b =>
+            modelBuilder.Entity("SubTaskerBackend.Models.TaskItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -147,7 +143,7 @@ namespace SubTaskerBackend.Migrations
                     b.ToTable("TaskItems");
                 });
 
-            modelBuilder.Entity("SubTaskerBackend.Models.Users", b =>
+            modelBuilder.Entity("SubTaskerBackend.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -203,9 +199,9 @@ namespace SubTaskerBackend.Migrations
                     b.ToTable("TaskItemsTags", (string)null);
                 });
 
-            modelBuilder.Entity("SubTaskerBackend.Models.Categories", b =>
+            modelBuilder.Entity("SubTaskerBackend.Models.Category", b =>
                 {
-                    b.HasOne("SubTaskerBackend.Models.Users", "User")
+                    b.HasOne("SubTaskerBackend.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -214,9 +210,9 @@ namespace SubTaskerBackend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SubTaskerBackend.Models.Tags", b =>
+            modelBuilder.Entity("SubTaskerBackend.Models.Tag", b =>
                 {
-                    b.HasOne("SubTaskerBackend.Models.Users", "User")
+                    b.HasOne("SubTaskerBackend.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -225,19 +221,19 @@ namespace SubTaskerBackend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SubTaskerBackend.Models.TaskItems", b =>
+            modelBuilder.Entity("SubTaskerBackend.Models.TaskItem", b =>
                 {
-                    b.HasOne("SubTaskerBackend.Models.Categories", "Category")
+                    b.HasOne("SubTaskerBackend.Models.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("SubTaskerBackend.Models.TaskItems", "ParentTask")
+                    b.HasOne("SubTaskerBackend.Models.TaskItem", "ParentTask")
                         .WithMany("SubTasks")
                         .HasForeignKey("ParentTaskId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("SubTaskerBackend.Models.Users", "User")
+                    b.HasOne("SubTaskerBackend.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -252,20 +248,20 @@ namespace SubTaskerBackend.Migrations
 
             modelBuilder.Entity("TaskItemsTags", b =>
                 {
-                    b.HasOne("SubTaskerBackend.Models.Tags", null)
+                    b.HasOne("SubTaskerBackend.Models.Tag", null)
                         .WithMany()
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SubTaskerBackend.Models.TaskItems", null)
+                    b.HasOne("SubTaskerBackend.Models.TaskItem", null)
                         .WithMany()
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SubTaskerBackend.Models.TaskItems", b =>
+            modelBuilder.Entity("SubTaskerBackend.Models.TaskItem", b =>
                 {
                     b.Navigation("SubTasks");
                 });

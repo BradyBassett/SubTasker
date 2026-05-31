@@ -57,7 +57,7 @@ namespace SubTaskerBackend.Data
                     .HasMaxLength(100)
                     .IsRequired();
 
-                entity.HasIndex(e => e.Name)
+                entity.HasIndex(e => new { e.UserId, e.Name })
                     .IsUnique();
 
                 entity.Property(e => e.UserId)
@@ -84,7 +84,7 @@ namespace SubTaskerBackend.Data
                     .HasMaxLength(50)
                     .IsRequired();
 
-                entity.HasIndex(e => e.Name)
+                entity.HasIndex(e => new { e.UserId, e.Name })
                     .IsUnique();
 
                 entity.Property(e => e.UserId)
