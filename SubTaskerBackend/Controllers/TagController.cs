@@ -33,6 +33,14 @@ namespace SubTaskerBackend.Controllers
             return Ok(tag.ToDto());
         }
 
+        [HttpGet("{tagId}/tasks")]
+        public async Task<IActionResult> GetTasksByTagId(int tagId)
+        {
+            Tag tag = await _tagService.GetTagByIdAsync(tagId);
+
+            return Ok(tag.Tasks.ToDtoList());
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateTag([FromBody] TagWriteDto tagCreateDto)
         {

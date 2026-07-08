@@ -50,6 +50,10 @@ namespace SubTaskerBackend.Services
             return tag;
         }
 
+        public async Task<List<TaskItem>> GetTasksByTagIdAsync(int tagId)
+        {
+        }
+
         public async Task<Tag> CreateTagAsync(TagWriteDto tagCreateDto)
         {
             if (string.IsNullOrWhiteSpace(tagCreateDto.Name))

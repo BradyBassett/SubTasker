@@ -9,6 +9,8 @@ namespace SubTaskerBackend.Interfaces
 
         Task<Tag> GetTagByIdAsync(int id);
 
+        Task<List<TaskItem>> GetTasksByTagIdAsync(int tagId);
+
         Task<Tag> CreateTagAsync(TagWriteDto tagCreateDto);
 
         Task<Tag> UpdateTagAsync(int id, TagWriteDto tagUpdateDto);
