@@ -20,7 +20,7 @@ namespace SubTaskerBackend.DTOs.TaskItems
 
         public int? ParentTaskId { get; set; }
 
-        public IReadOnlyCollection<TaskItemReadDto> SubTasks { get; set; } = new List<TaskItemReadDto>();
+        public IReadOnlyCollection<int> SubTaskIds { get; set; } = new List<int>();
 
         public int UserId { get; set; }
 

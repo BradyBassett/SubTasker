@@ -1,12 +1,17 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace SubTaskerBackend.DTOs.TaskItems
 {
     public class TaskItemWriteDto
     {
+        [Required]
         public string Title { get; set; } = null!;
 
         public string? Description { get; set; }
 
-        public Enums.PriorityLevel Priority { get; set; }
+        public Enums.TaskStatus? Status { get; set; }
+
+        public Enums.PriorityLevel? Priority { get; set; }
 
         public DateTime? DueDate { get; set; }
 

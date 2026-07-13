@@ -18,7 +18,7 @@ namespace SubTaskerBackend.Mappers
 				CategoryId = taskItem.CategoryId,
 				TagIds = taskItem.Tags.Select(tag => tag.Id).ToList(),
 				ParentTaskId = taskItem.ParentTaskId,
-				SubTasks = taskItem.SubTasks.ToDtoList(),
+				SubTaskIds = taskItem.SubTasks.Select(subTask => subTask.Id).ToList(),
 				UserId = taskItem.UserId,
 				CreatedAt = taskItem.CreatedAt,
 				UpdatedAt = taskItem.UpdatedAt

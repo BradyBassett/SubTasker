@@ -42,9 +42,9 @@ namespace SubTaskerBackend.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTaskItem([FromBody] TaskItemWriteDto taskItem)
+        public async Task<IActionResult> CreateTaskItem([FromBody] TaskItemWriteDto taskItemDto)
         {
-            TaskItem createdTaskItem = await _taskItemService.CreateTaskItem(taskItem);
+            TaskItem createdTaskItem = await _taskItemService.CreateTaskItem(taskItemDto);
 
             return CreatedAtAction(nameof(GetTaskItemById), new { id = createdTaskItem.Id }, createdTaskItem.ToDto());
         }
@@ -58,9 +58,9 @@ namespace SubTaskerBackend.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> UpdateTaskItem(int id, [FromBody] TaskItemWriteDto taskItem)
+        public async Task<IActionResult> UpdateTaskItem(int id, [FromBody] TaskItemUpdateDto taskItemDto)
         {
-            TaskItem updatedTaskItem = await _taskItemService.UpdateTaskItem(id, taskItem);
+            TaskItem updatedTaskItem = await _taskItemService.UpdateTaskItem(id, taskItemDto);
 
             return Ok(updatedTaskItem.ToDto());
         }

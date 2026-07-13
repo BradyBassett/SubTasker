@@ -52,6 +52,18 @@ namespace SubTaskerBackend.Services
 
         public async Task<List<TaskItem>> GetTasksByTagIdAsync(int tagId)
         {
+            int userId = ClaimHelper.GetUserIdFromClaims(_httpContextAccessor);
+
+            Tag? tag = await _dbContext.Tags
+                .Include(t => t.Tasks)
+                .FirstOrDefaultAsync(t => t.Id == tagId && t.UserId == userId);
+
+            if (tag == null)
+            {
+                throw new NotFoundException("Tag not found.");
+            }
+
+            return tag.Tasks.ToList();
         }
 
         public async Task<Tag> CreateTagAsync(TagWriteDto tagCreateDto)

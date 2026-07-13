@@ -11,11 +11,11 @@ namespace SubTaskerBackend.Interfaces
 
         Task<List<Tag>> GetTagsByTaskItemId(int taskItemId);
 
-        Task<TaskItem> CreateTaskItem(TaskItemWriteDto taskItem);
+        Task<TaskItem> CreateTaskItem(TaskItemWriteDto taskItemDto);
 
         Task AddTagToTaskItem(int taskItemId, int tagId);
 
-        Task<TaskItem> UpdateTaskItem(int id, TaskItemWriteDto taskItem);
+        Task<TaskItem> UpdateTaskItem(int id, TaskItemUpdateDto taskItemDto);
 
         Task DeleteTaskItem(int id);
 
