@@ -5,20 +5,20 @@ namespace SubTaskerBackend.Interfaces
 {
     public interface ITaskItemService
     {
-        Task<List<TaskItem>> GetAllTaskItems();
+        Task<List<TaskItem>> GetAllTaskItemsAsync();
 
-        Task<TaskItem> GetTaskItemById(int id);
+        Task<TaskItem> GetTaskItemByIdAsync(int id);
 
-        Task<List<Tag>> GetTagsByTaskItemId(int taskItemId);
+        Task<List<Tag>> GetTagsByTaskItemIdAsync(int taskItemId);
 
-        Task<TaskItem> CreateTaskItem(TaskItemWriteDto taskItemDto);
+        Task<TaskItem> CreateTaskItemAsync(TaskItemWriteDto taskItemDto);
 
-        Task AddTagToTaskItem(int taskItemId, int tagId);
+        Task AddTagToTaskItemAsync(int taskItemId, int tagId);
 
-        Task<TaskItem> UpdateTaskItem(int id, TaskItemUpdateDto taskItemDto);
+        Task<TaskItem> UpdateTaskItemAsync(int id, TaskItemUpdateDto taskItemDto);
 
-        Task DeleteTaskItem(int id);
+        Task DeleteTaskItemAsync(int id);
 
-        Task RemoveTagFromTaskItem(int taskItemId, int tagId);
+        Task RemoveTagFromTaskItemAsync(int taskItemId, int tagId);
     }
 }

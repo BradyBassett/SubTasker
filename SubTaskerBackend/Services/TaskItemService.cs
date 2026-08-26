@@ -20,7 +20,7 @@ namespace SubTaskerBackend.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<List<TaskItem>> GetAllTaskItems()
+        public async Task<List<TaskItem>> GetAllTaskItemsAsync()
         {
             int userId = ClaimHelper.GetUserIdFromClaims(_httpContextAccessor);
 
@@ -34,7 +34,7 @@ namespace SubTaskerBackend.Services
             return taskItems;
         }
 
-        public async Task<List<Tag>> GetTagsByTaskItemId(int taskItemId)
+        public async Task<List<Tag>> GetTagsByTaskItemIdAsync(int taskItemId)
         {
             int userId = ClaimHelper.GetUserIdFromClaims(_httpContextAccessor);
 
@@ -50,7 +50,7 @@ namespace SubTaskerBackend.Services
             return taskItem.Tags.ToList();
         }
 
-        public async Task<TaskItem> GetTaskItemById(int id)
+        public async Task<TaskItem> GetTaskItemByIdAsync(int id)
         {
             int userId = ClaimHelper.GetUserIdFromClaims(_httpContextAccessor);
 
@@ -67,7 +67,7 @@ namespace SubTaskerBackend.Services
             return taskItem;
         }
 
-        public async Task<TaskItem> CreateTaskItem(TaskItemWriteDto taskItemDto)
+        public async Task<TaskItem> CreateTaskItemAsync(TaskItemWriteDto taskItemDto)
         {
             if (string.IsNullOrWhiteSpace(taskItemDto.Title))
             {
@@ -135,7 +135,7 @@ namespace SubTaskerBackend.Services
             return taskItem;
         }
 
-        public async Task AddTagToTaskItem(int taskItemId, int tagId)
+        public async Task AddTagToTaskItemAsync(int taskItemId, int tagId)
         {
             int userId = ClaimHelper.GetUserIdFromClaims(_httpContextAccessor);
 
@@ -166,7 +166,7 @@ namespace SubTaskerBackend.Services
             }
         }
 
-        public async Task<TaskItem> UpdateTaskItem(int id, TaskItemUpdateDto taskItemDto)
+        public async Task<TaskItem> UpdateTaskItemAsync(int id, TaskItemUpdateDto taskItemDto)
         {
             int userId = ClaimHelper.GetUserIdFromClaims(_httpContextAccessor);
 
@@ -267,7 +267,7 @@ namespace SubTaskerBackend.Services
             return taskItem;
         }
 
-        public async Task DeleteTaskItem(int id)
+        public async Task DeleteTaskItemAsync(int id)
         {
             int userId = ClaimHelper.GetUserIdFromClaims(_httpContextAccessor);
 
@@ -282,7 +282,7 @@ namespace SubTaskerBackend.Services
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task RemoveTagFromTaskItem(int taskItemId, int tagId)
+        public async Task RemoveTagFromTaskItemAsync(int taskItemId, int tagId)
         {
             int userId = ClaimHelper.GetUserIdFromClaims(_httpContextAccessor);
 

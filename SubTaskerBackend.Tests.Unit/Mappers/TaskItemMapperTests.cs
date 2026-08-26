@@ -40,14 +40,14 @@ public class TaskItemMapperTests
         Assert.Equal(taskItem.CategoryId, result.CategoryId);
         Assert.Equal(taskItem.Tags.Select(tag => tag.Id).ToList(), result.TagIds);
         Assert.Equal(taskItem.ParentTaskId, result.ParentTaskId);
-        Assert.Equal(taskItem.SubTasks.Count, result.SubTasks.Count);
+        Assert.Equal(taskItem.SubTasks.Count, result.SubTaskIds.Count);
         Assert.Equal(taskItem.UserId, result.UserId);
         Assert.Equal(taskItem.CreatedAt, result.CreatedAt);
         Assert.Equal(taskItem.UpdatedAt, result.UpdatedAt);
     }
 
     [Fact]
-    public void ToDto_WithSubTasks_ShouldMapNestedSubTasks()
+    public void ToDto_WithSubTasks_ShouldMapSubTaskIds()
     {
         var taskItem = new TaskItem
         {
@@ -121,7 +121,7 @@ public class TaskItemMapperTests
         Assert.Equal(taskItem.CategoryId, result.CategoryId);
         Assert.Equal(taskItem.Tags.Select(tag => tag.Id).ToList(), result.TagIds);
         Assert.Equal(taskItem.ParentTaskId, result.ParentTaskId);
-        Assert.Equal(taskItem.SubTasks.Count, result.SubTasks.Count);
+        Assert.Equal(taskItem.SubTasks.Count, result.SubTaskIds.Count);
         Assert.Equal(taskItem.UserId, result.UserId);
         Assert.Equal(taskItem.CreatedAt, result.CreatedAt);
         Assert.Equal(taskItem.UpdatedAt, result.UpdatedAt);
@@ -208,7 +208,7 @@ public class TaskItemMapperTests
             Assert.Equal(taskItems[i].CategoryId, result.ElementAt(i).CategoryId);
             Assert.Equal(taskItems[i].Tags.Select(tag => tag.Id).ToList(), result.ElementAt(i).TagIds);
             Assert.Equal(taskItems[i].ParentTaskId, result.ElementAt(i).ParentTaskId);
-            Assert.Equal(taskItems[i].SubTasks.Count, result.ElementAt(i).SubTasks.Count);
+            Assert.Equal(taskItems[i].SubTasks.Count, result.ElementAt(i).SubTaskIds.Count);
             Assert.Equal(taskItems[i].UserId, result.ElementAt(i).UserId);
             Assert.Equal(taskItems[i].CreatedAt, result.ElementAt(i).CreatedAt);
             Assert.Equal(taskItems[i].UpdatedAt, result.ElementAt(i).UpdatedAt);

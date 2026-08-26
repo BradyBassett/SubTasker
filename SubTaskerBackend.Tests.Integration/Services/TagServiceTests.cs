@@ -7,6 +7,7 @@ using SubTaskerBackend.Exceptions;
 using SubTaskerBackend.Models;
 using SubTaskerBackend.Services;
 using SubTaskerBackend.Tests.Integration.Fixtures;
+using SubTaskerBackend.Tests.Integration.Helpers;
 
 namespace SubTaskerBackend.Tests.Integration.Services
 {
@@ -43,14 +44,14 @@ namespace SubTaskerBackend.Tests.Integration.Services
         [Fact]
         public async Task GetAllTagsAsync_WithMixedUsers_ReturnsOnlyCurrentUsersTagsOrderedByName()
         {
-            User currentUser = await SeedTestUserAsync("currentuser", "current@mail.com");
-            User otherUser = await SeedTestUserAsync("otheruser", "other@mail.com");
+            User currentUser = await TestDataHelper.SeedTestUserAsync(_dbContext, "currentuser", "current@mail.com");
+            User otherUser = await TestDataHelper.SeedTestUserAsync(_dbContext, "otheruser", "other@mail.com");
 
-            await SeedTagAsync(currentUser.Id, "Urgent");
-            await SeedTagAsync(currentUser.Id, "Backend");
-            await SeedTagAsync(otherUser.Id, "Frontend");
+            await TestDataHelper.SeedTagAsync(_dbContext, currentUser.Id, "Urgent");
+            await TestDataHelper.SeedTagAsync(_dbContext, currentUser.Id, "Backend");
+            await TestDataHelper.SeedTagAsync(_dbContext, otherUser.Id, "Frontend");
 
-            SetHttpContextUser(currentUser.Id);
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, currentUser.Id);
 
             List<Tag> result = await _tagService.GetAllTagsAsync();
 
@@ -62,9 +63,9 @@ namespace SubTaskerBackend.Tests.Integration.Services
         [Fact]
         public async Task GetTagByIdAsync_WithOwnedTag_ReturnsTag()
         {
-            User user = await SeedTestUserAsync();
-            Tag tag = await SeedTagAsync(user.Id, "Urgent");
-            SetHttpContextUser(user.Id);
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Urgent");
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
 
             Tag result = await _tagService.GetTagByIdAsync(tag.Id);
 
@@ -76,10 +77,10 @@ namespace SubTaskerBackend.Tests.Integration.Services
         [Fact]
         public async Task GetTagByIdAsync_WithDifferentUsersTag_ThrowsNotFoundException()
         {
-            User user = await SeedTestUserAsync("currentuser", "current@mail.com");
-            User otherUser = await SeedTestUserAsync("otheruser", "other@mail.com");
-            Tag tag = await SeedTagAsync(otherUser.Id, "Private");
-            SetHttpContextUser(user.Id);
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext, "currentuser", "current@mail.com");
+            User otherUser = await TestDataHelper.SeedTestUserAsync(_dbContext, "otheruser", "other@mail.com");
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, otherUser.Id, "Private");
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
 
             await Assert.ThrowsAsync<NotFoundException>(() => _tagService.GetTagByIdAsync(tag.Id));
         }
@@ -87,8 +88,8 @@ namespace SubTaskerBackend.Tests.Integration.Services
         [Fact]
         public async Task CreateTagAsync_WithValidDto_CreatesTagForCurrentUser()
         {
-            User user = await SeedTestUserAsync();
-            SetHttpContextUser(user.Id);
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
 
             Tag result = await _tagService.CreateTagAsync(new TagWriteDto { Name = "  Urgent  " });
 
@@ -107,8 +108,8 @@ namespace SubTaskerBackend.Tests.Integration.Services
         [Fact]
         public async Task CreateTagAsync_WithWhitespaceName_ThrowsBadRequestException()
         {
-            User user = await SeedTestUserAsync();
-            SetHttpContextUser(user.Id);
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
 
             await Assert.ThrowsAsync<BadRequestException>(() => _tagService.CreateTagAsync(new TagWriteDto { Name = "   " }));
         }
@@ -116,9 +117,9 @@ namespace SubTaskerBackend.Tests.Integration.Services
         [Fact]
         public async Task CreateTagAsync_WithDuplicateNameForSameUser_ThrowsConflictException()
         {
-            User user = await SeedTestUserAsync();
-            await SeedTagAsync(user.Id, "Urgent");
-            SetHttpContextUser(user.Id);
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+            await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Urgent");
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
 
             await Assert.ThrowsAsync<ConflictException>(() => _tagService.CreateTagAsync(new TagWriteDto { Name = "Urgent" }));
         }
@@ -126,10 +127,10 @@ namespace SubTaskerBackend.Tests.Integration.Services
         [Fact]
         public async Task CreateTagAsync_WithDuplicateNameForDifferentUser_CreatesTag()
         {
-            User user = await SeedTestUserAsync("currentuser", "current@mail.com");
-            User otherUser = await SeedTestUserAsync("otheruser", "other@mail.com");
-            await SeedTagAsync(otherUser.Id, "Urgent");
-            SetHttpContextUser(user.Id);
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext, "currentuser", "current@mail.com");
+            User otherUser = await TestDataHelper.SeedTestUserAsync(_dbContext, "otheruser", "other@mail.com");
+            await TestDataHelper.SeedTagAsync(_dbContext, otherUser.Id, "Urgent");
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
 
             Tag result = await _tagService.CreateTagAsync(new TagWriteDto { Name = "Urgent" });
 
@@ -140,9 +141,9 @@ namespace SubTaskerBackend.Tests.Integration.Services
         [Fact]
         public async Task UpdateTagAsync_WithValidDto_UpdatesTag()
         {
-            User user = await SeedTestUserAsync();
-            Tag tag = await SeedTagAsync(user.Id, "Old Name");
-            SetHttpContextUser(user.Id);
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Old Name");
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
 
             Tag result = await _tagService.UpdateTagAsync(tag.Id, new TagWriteDto { Name = "  New Name  " });
 
@@ -159,10 +160,10 @@ namespace SubTaskerBackend.Tests.Integration.Services
         [Fact]
         public async Task UpdateTagAsync_WithDuplicateNameForSameUser_ThrowsConflictException()
         {
-            User user = await SeedTestUserAsync();
-            Tag tag = await SeedTagAsync(user.Id, "Urgent");
-            await SeedTagAsync(user.Id, "Backend");
-            SetHttpContextUser(user.Id);
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Urgent");
+            await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Backend");
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
 
             await Assert.ThrowsAsync<ConflictException>(() => _tagService.UpdateTagAsync(tag.Id, new TagWriteDto { Name = "Backend" }));
         }
@@ -170,14 +171,14 @@ namespace SubTaskerBackend.Tests.Integration.Services
         [Fact]
         public async Task DeleteTagAsync_WithTagAssignedToTask_DeletesTagAndKeepsTask()
         {
-            User user = await SeedTestUserAsync();
-            Tag tag = await SeedTagAsync(user.Id, "Urgent");
-            TaskItem taskItem = await SeedTaskItemAsync(user.Id, "Task with tag");
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Urgent");
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Task with tag");
 
             taskItem.Tags.Add(tag);
             await _dbContext.SaveChangesAsync();
 
-            SetHttpContextUser(user.Id);
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
 
             await _tagService.DeleteTagAsync(tag.Id);
 
@@ -190,62 +191,6 @@ namespace SubTaskerBackend.Tests.Integration.Services
             Assert.Null(deletedTag);
             Assert.NotNull(existingTask);
             Assert.Empty(existingTask.Tags);
-        }
-
-        private void SetHttpContextUser(int userId)
-        {
-            DefaultHttpContext httpContext = new DefaultHttpContext();
-            httpContext.User = new ClaimsPrincipal(
-                new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, userId.ToString())
-                })
-            );
-
-            _httpContextAccessor.HttpContext = httpContext;
-        }
-
-        private async Task<User> SeedTestUserAsync(string username = "testuser", string email = "testuser@mail.com")
-        {
-            User user = new User
-            {
-                Username = username,
-                Email = email,
-                PasswordHash = "somehash"
-            };
-
-            _dbContext.Users.Add(user);
-            await _dbContext.SaveChangesAsync();
-
-            return user;
-        }
-
-        private async Task<Tag> SeedTagAsync(int userId, string name)
-        {
-            Tag tag = new Tag
-            {
-                Name = name,
-                UserId = userId
-            };
-
-            _dbContext.Tags.Add(tag);
-            await _dbContext.SaveChangesAsync();
-
-            return tag;
-        }
-
-        private async Task<TaskItem> SeedTaskItemAsync(int userId, string title)
-        {
-            TaskItem taskItem = new TaskItem
-            {
-                Title = title,
-                UserId = userId
-            };
-
-            _dbContext.TaskItems.Add(taskItem);
-            await _dbContext.SaveChangesAsync();
-
-            return taskItem;
         }
     }
 }
