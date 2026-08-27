@@ -1,8 +1,6 @@
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
 using SubTaskerBackend.DTOs.Users;
-using SubTaskerBackend.Models;
 using SubTaskerBackend.Tests.Api.Fixtures;
 using SubTaskerBackend.Tests.Api.Helpers;
 

@@ -7,6 +7,7 @@ using SubTaskerBackend.Services;
 using SubTaskerBackend.Tests.Integration.Fixtures;
 using SubTaskerBackend.Tests.Integration.Helpers;
 using SubTaskerBackend.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace SubTaskerBackend.Tests.Integration.Services
 {
@@ -438,56 +439,680 @@ namespace SubTaskerBackend.Tests.Integration.Services
             });
         }
 
-        /*
-        CreateTaskItem_WithDuplicateTagIds_ThrowsBadRequestException
-        CreateTaskItem_WithMixedUserTagIds_ThrowsNotFoundException
-        CreateTaskItem_WithExplicitStatusAndPriority_UsesProvidedValues
-        CreateTaskItem_WithoutStatusOrPriority_UsesDefaultValues
-        */
+        [Fact]
+        public async Task CreateTaskItem_WithDuplicateTagIds_ThrowsBadRequestException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Duplicate Tag");
+
+            TaskItemWriteDto taskItemWriteDto = new TaskItemWriteDto
+            {
+                Title = "Task with Duplicate Tags",
+                TagIds = new List<int> { tag.Id, tag.Id }
+            };
+
+            await Assert.ThrowsAsync<BadRequestException>(async () =>
+            {
+                await _taskItemService.CreateTaskItemAsync(taskItemWriteDto);
+            });
+        }
+
+        [Fact]
+        public async Task CreateTaskItem_WithMixedUserTagIds_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+            User differentUser = await TestDataHelper.SeedTestUserAsync(
+                _dbContext,
+                "differentuser",
+                "differentuser@example.com");
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            Tag userTag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Owned Tag");
+            Tag differentUserTag = await TestDataHelper.SeedTagAsync(
+                _dbContext,
+                differentUser.Id,
+                "Different User Tag");
+
+            TaskItemWriteDto taskItemWriteDto = new TaskItemWriteDto
+            {
+                Title = "Task with Mixed User Tags",
+                TagIds = new List<int> { userTag.Id, differentUserTag.Id }
+            };
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.CreateTaskItemAsync(taskItemWriteDto);
+            });
+        }
+
+        [Fact]
+        public async Task CreateTaskItem_WithExplicitStatusAndPriority_UsesProvidedValues()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItemWriteDto taskItemWriteDto = new TaskItemWriteDto
+            {
+                Title = "Explicit Status and Priority",
+                Status = Enums.TaskStatus.completed,
+                Priority = PriorityLevel.Critical
+            };
+
+            TaskItem createdTaskItem = await _taskItemService.CreateTaskItemAsync(taskItemWriteDto);
+
+            Assert.Equal(Enums.TaskStatus.completed, createdTaskItem.Status);
+            Assert.Equal(PriorityLevel.Critical, createdTaskItem.Priority);
+        }
+
+        [Fact]
+        public async Task CreateTaskItem_WithoutStatusOrPriority_UsesDefaultValues()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItemWriteDto taskItemWriteDto = new TaskItemWriteDto
+            {
+                Title = "Default Status and Priority"
+            };
+
+            TaskItem createdTaskItem = await _taskItemService.CreateTaskItemAsync(taskItemWriteDto);
+
+            Assert.Equal(Enums.TaskStatus.notStarted, createdTaskItem.Status);
+            Assert.Equal(PriorityLevel.Medium, createdTaskItem.Priority);
+        }
 
         // AddTagToTaskItem and associated tests
-        /*
-        AddTagToTaskItem_WithValidTaskAndTag_AddsTagToTaskItem
-        AddTagToTaskItem_WithDifferentUsersTaskItem_ThrowsNotFoundException
-        AddTagToTaskItem_WithMissingTaskItem_ThrowsNotFoundException
-        AddTagToTaskItem_WithInvalidTagId_ThrowsNotFoundException
-        AddTagToTaskItem_WithAlreadyAssociatedTag_ThrowsBadRequestException
-        */
+        [Fact]
+        public async Task AddTagToTaskItem_WithValidTaskAndTag_AddsTagToTaskItem()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Test Tag");
+
+            await _taskItemService.AddTagToTaskItemAsync(taskItem.Id, tag.Id);
+
+            TaskItem updatedTaskItem = await _dbContext.TaskItems
+                .Include(t => t.Tags)
+                .SingleAsync(t => t.Id == taskItem.Id);
+
+            Assert.Contains(updatedTaskItem.Tags, t => t.Id == tag.Id);
+        }
+
+        [Fact]
+        public async Task AddTagToTaskItem_WithDifferentUsersTaskItem_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+            User otherUser = await TestDataHelper.SeedTestUserAsync(_dbContext, "OtherUser", "otheruser@example.com");
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, otherUser.Id, "Test Task");
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Test Tag");
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.AddTagToTaskItemAsync(taskItem.Id, tag.Id);
+            });
+        }
+
+        [Fact]
+        public async Task AddTagToTaskItem_WithMissingTaskItem_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Test Tag");
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.AddTagToTaskItemAsync(9999, tag.Id);
+            });
+        }
+
+        [Fact]
+        public async Task AddTagToTaskItem_WithInvalidTagId_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.AddTagToTaskItemAsync(taskItem.Id, 9999);
+            });
+        }
+
+        [Fact]
+        public async Task AddTagToTaskItem_WithAlreadyAssociatedTag_ThrowsBadRequestException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Test Tag");
+
+            await _taskItemService.AddTagToTaskItemAsync(taskItem.Id, tag.Id);
+
+            await Assert.ThrowsAsync<BadRequestException>(async () =>
+            {
+                await _taskItemService.AddTagToTaskItemAsync(taskItem.Id, tag.Id);
+            });
+        }
 
         // UpdateTaskItem and associated tests
-        /*
-        UpdateTaskItem_WithValidDto_UpdatesTaskItem
-        UpdateTaskItem_WithPartialDto_UpdatesOnlyProvidedFields
-        UpdateTaskItem_WithInvalidTaskItemId_ThrowsNotFoundException
-        UpdateTaskItem_WithInvalidCategoryId_ThrowsNotFoundException
-        UpdateTaskItem_WithInvalidParentTaskId_ThrowsNotFoundException
-        UpdateTaskItem_WithSelfParentTaskId_ThrowsBadRequestException
-        UpdateTaskItem_WithDuplicateTagIds_ThrowsBadRequestException
-        UpdateTaskItem_WithInvalidTagIds_ThrowsNotFoundException
-        UpdateTaskItem_WithDuplicateSubTaskIds_ThrowsBadRequestException
-        UpdateTaskItem_WithSelfInSubTaskIds_ThrowsBadRequestException
-        UpdateTaskItem_WithInvalidSubTaskIds_ThrowsNotFoundException
-        UpdateTaskItem_WithTagIds_ReplacesExistingTags
-        UpdateTaskItem_WithSubTaskIds_ReplacesExistingSubTasks
-        UpdateTaskItem_WithNullTagIdsAndSubTaskIds_KeepsExistingRelations
-        */
+        [Fact]
+        public async Task UpdateTaskItem_WithValidDto_UpdatesTaskItem()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Original Task");
+            Category category = await TestDataHelper.SeedCategoryAsync(_dbContext, user.Id, "Updated Category");
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Updated Tag");
+            DateTime dueDate = DateTime.UtcNow.AddDays(2);
+
+            TaskItemUpdateDto taskItemUpdateDto = new TaskItemUpdateDto
+            {
+                Title = "Updated Task",
+                Description = "Updated Description",
+                Status = Enums.TaskStatus.inProgress,
+                Priority = PriorityLevel.High,
+                DueDate = dueDate,
+                CategoryId = category.Id,
+                TagIds = new List<int> { tag.Id }
+            };
+
+            TaskItem updatedTaskItem = await _taskItemService.UpdateTaskItemAsync(taskItem.Id, taskItemUpdateDto);
+
+            Assert.Equal("Updated Task", updatedTaskItem.Title);
+            Assert.Equal("Updated Description", updatedTaskItem.Description);
+            Assert.Equal(Enums.TaskStatus.inProgress, updatedTaskItem.Status);
+            Assert.Equal(PriorityLevel.High, updatedTaskItem.Priority);
+            Assert.Equal(dueDate, updatedTaskItem.DueDate);
+            Assert.Equal(category.Id, updatedTaskItem.CategoryId);
+            Assert.Contains(updatedTaskItem.Tags, currentTag => currentTag.Id == tag.Id);
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithPartialDto_UpdatesOnlyProvidedFields()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            DateTime originalDueDate = DateTime.UtcNow.AddDays(1);
+            TaskItem taskItem = new TaskItem
+            {
+                Title = "Original Task",
+                Description = "Original Description",
+                Status = Enums.TaskStatus.completed,
+                Priority = PriorityLevel.High,
+                DueDate = originalDueDate,
+                UserId = user.Id
+            };
+            _dbContext.TaskItems.Add(taskItem);
+            await _dbContext.SaveChangesAsync();
+
+            TaskItemUpdateDto taskItemUpdateDto = new TaskItemUpdateDto
+            {
+                Title = "Updated Title"
+            };
+
+            TaskItem updatedTaskItem = await _taskItemService.UpdateTaskItemAsync(taskItem.Id, taskItemUpdateDto);
+
+            Assert.Equal("Updated Title", updatedTaskItem.Title);
+            Assert.Equal("Original Description", updatedTaskItem.Description);
+            Assert.Equal(Enums.TaskStatus.completed, updatedTaskItem.Status);
+            Assert.Equal(PriorityLevel.High, updatedTaskItem.Priority);
+            Assert.Equal(originalDueDate, updatedTaskItem.DueDate);
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithInvalidTaskItemId_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.UpdateTaskItemAsync(9999, new TaskItemUpdateDto { Title = "Updated Task" });
+            });
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithInvalidCategoryId_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.UpdateTaskItemAsync(
+                    taskItem.Id,
+                    new TaskItemUpdateDto { CategoryId = 9999 });
+            });
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithInvalidParentTaskId_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.UpdateTaskItemAsync(
+                    taskItem.Id,
+                    new TaskItemUpdateDto { ParentTaskId = 9999 });
+            });
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithSelfParentTaskId_ThrowsBadRequestException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+
+            await Assert.ThrowsAsync<BadRequestException>(async () =>
+            {
+                await _taskItemService.UpdateTaskItemAsync(
+                    taskItem.Id,
+                    new TaskItemUpdateDto { ParentTaskId = taskItem.Id });
+            });
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithDuplicateTagIds_ThrowsBadRequestException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Test Tag");
+
+            await Assert.ThrowsAsync<BadRequestException>(async () =>
+            {
+                await _taskItemService.UpdateTaskItemAsync(
+                    taskItem.Id,
+                    new TaskItemUpdateDto { TagIds = new List<int> { tag.Id, tag.Id } });
+            });
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithInvalidTagIds_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.UpdateTaskItemAsync(
+                    taskItem.Id,
+                    new TaskItemUpdateDto { TagIds = new List<int> { 9999 } });
+            });
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithDuplicateSubTaskIds_ThrowsBadRequestException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Parent Task");
+            TaskItem subTask = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Sub Task");
+
+            await Assert.ThrowsAsync<BadRequestException>(async () =>
+            {
+                await _taskItemService.UpdateTaskItemAsync(
+                    taskItem.Id,
+                    new TaskItemUpdateDto { SubTaskIds = new List<int> { subTask.Id, subTask.Id } });
+            });
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithSelfInSubTaskIds_ThrowsBadRequestException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+
+            await Assert.ThrowsAsync<BadRequestException>(async () =>
+            {
+                await _taskItemService.UpdateTaskItemAsync(
+                    taskItem.Id,
+                    new TaskItemUpdateDto { SubTaskIds = new List<int> { taskItem.Id } });
+            });
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithInvalidSubTaskIds_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Parent Task");
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.UpdateTaskItemAsync(
+                    taskItem.Id,
+                    new TaskItemUpdateDto { SubTaskIds = new List<int> { 9999 } });
+            });
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithTagIds_ReplacesExistingTags()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+            Tag originalTag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Original Tag");
+            Tag replacementTag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Replacement Tag");
+            taskItem.Tags.Add(originalTag);
+            await _dbContext.SaveChangesAsync();
+
+            await _taskItemService.UpdateTaskItemAsync(
+                taskItem.Id,
+                new TaskItemUpdateDto { TagIds = new List<int> { replacementTag.Id } });
+
+            TaskItem updatedTaskItem = await _dbContext.TaskItems
+                .Include(currentTask => currentTask.Tags)
+                .SingleAsync(currentTask => currentTask.Id == taskItem.Id);
+
+            Assert.DoesNotContain(updatedTaskItem.Tags, currentTag => currentTag.Id == originalTag.Id);
+            Assert.Contains(updatedTaskItem.Tags, currentTag => currentTag.Id == replacementTag.Id);
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithSubTaskIds_ReplacesExistingSubTasks()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Parent Task");
+            TaskItem originalSubTask = await TestDataHelper.SeedSubTaskItemAsync(
+                _dbContext,
+                user.Id,
+                "Original Sub Task",
+                taskItem.Id);
+            TaskItem replacementSubTask = await TestDataHelper.SeedTaskItemAsync(
+                _dbContext,
+                user.Id,
+                "Replacement Sub Task");
+
+            await _taskItemService.UpdateTaskItemAsync(
+                taskItem.Id,
+                new TaskItemUpdateDto { SubTaskIds = new List<int> { replacementSubTask.Id } });
+
+            TaskItem updatedTaskItem = await _dbContext.TaskItems
+                .Include(currentTask => currentTask.SubTasks)
+                .SingleAsync(currentTask => currentTask.Id == taskItem.Id);
+
+            Assert.DoesNotContain(updatedTaskItem.SubTasks, currentSubTask => currentSubTask.Id == originalSubTask.Id);
+            Assert.Contains(updatedTaskItem.SubTasks, currentSubTask => currentSubTask.Id == replacementSubTask.Id);
+        }
+
+        [Fact]
+        public async Task UpdateTaskItem_WithNullTagIdsAndSubTaskIds_KeepsExistingRelations()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Original Task");
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Existing Tag");
+            TaskItem subTask = await TestDataHelper.SeedSubTaskItemAsync(
+                _dbContext,
+                user.Id,
+                "Existing Sub Task",
+                taskItem.Id);
+            taskItem.Tags.Add(tag);
+            await _dbContext.SaveChangesAsync();
+
+            TaskItem updatedTaskItem = await _taskItemService.UpdateTaskItemAsync(
+                taskItem.Id,
+                new TaskItemUpdateDto { Title = "Updated Task" });
+
+            Assert.Equal("Updated Task", updatedTaskItem.Title);
+            Assert.Contains(updatedTaskItem.Tags, currentTag => currentTag.Id == tag.Id);
+            Assert.Contains(updatedTaskItem.SubTasks, currentSubTask => currentSubTask.Id == subTask.Id);
+        }
 
         // DeleteTaskItem and associated tests
-        /*
-        DeleteTaskItem_WithOwnedTaskItem_DeletesTaskItem
-        DeleteTaskItem_WithInvalidTaskItemId_ThrowsNotFoundException
-        DeleteTaskItem_WithDifferentUsersTaskItem_ThrowsNotFoundException
-        DeleteTaskItem_WithSubTasksOrTags_DeletesTaskItemAndCleansUpRelations
-        */
+        [Fact]
+        public async Task DeleteTaskItem_WithOwnedTaskItem_DeletesTaskItem()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Task to Delete");
+
+            await _taskItemService.DeleteTaskItemAsync(taskItem.Id);
+
+            TaskItem? deletedTaskItem = await _dbContext.TaskItems
+                .SingleOrDefaultAsync(currentTask => currentTask.Id == taskItem.Id);
+
+            Assert.Null(deletedTaskItem);
+        }
+
+        [Fact]
+        public async Task DeleteTaskItem_WithInvalidTaskItemId_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.DeleteTaskItemAsync(9999);
+            });
+        }
+
+        [Fact]
+        public async Task DeleteTaskItem_WithDifferentUsersTaskItem_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(
+                _dbContext,
+                "currentuser",
+                "currentuser@example.com");
+            User otherUser = await TestDataHelper.SeedTestUserAsync(
+                _dbContext,
+                "otheruser",
+                "otheruser@example.com");
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, otherUser.Id, "Other User Task");
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.DeleteTaskItemAsync(taskItem.Id);
+            });
+        }
+
+        [Fact]
+        public async Task DeleteTaskItem_WithSubTasksOrTags_DeletesTaskItemAndCleansUpRelations()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Task to Delete");
+            TaskItem subTask = await TestDataHelper.SeedSubTaskItemAsync(
+                _dbContext,
+                user.Id,
+                "Subtask to Preserve",
+                taskItem.Id);
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Tag to Preserve");
+            taskItem.Tags.Add(tag);
+            await _dbContext.SaveChangesAsync();
+
+            await _taskItemService.DeleteTaskItemAsync(taskItem.Id);
+
+            TaskItem? deletedTaskItem = await _dbContext.TaskItems
+                .Include(currentTask => currentTask.Tags)
+                .SingleOrDefaultAsync(currentTask => currentTask.Id == taskItem.Id);
+            TaskItem? preservedSubTask = await _dbContext.TaskItems
+                .SingleOrDefaultAsync(currentTask => currentTask.Id == subTask.Id);
+            Tag? preservedTag = await _dbContext.Tags
+                .Include(currentTag => currentTag.Tasks)
+                .SingleOrDefaultAsync(currentTag => currentTag.Id == tag.Id);
+
+            Assert.Null(deletedTaskItem);
+            Assert.NotNull(preservedSubTask);
+            Assert.Null(preservedSubTask.ParentTaskId);
+            Assert.NotNull(preservedTag);
+            Assert.DoesNotContain(preservedTag.Tasks, currentTask => currentTask.Id == taskItem.Id);
+        }
 
         // RemoveTagFromTaskItem and associated tests
-        /*
-        RemoveTagFromTaskItem_WithAssociatedTag_RemovesTagFromTaskItem
-        RemoveTagFromTaskItem_WithTaskItemThatDoesNotHaveTag_ThrowsBadRequestException
-        RemoveTagFromTaskItem_WithInvalidTaskItemId_ThrowsNotFoundException
-        RemoveTagFromTaskItem_WithInvalidTagId_ThrowsNotFoundException
-        RemoveTagFromTaskItem_WithDifferentUsersTaskItem_ThrowsNotFoundException
-        RemoveTagFromTaskItem_WithDifferentUsersTag_ThrowsNotFoundException
-        */
+        [Fact]
+        public async Task RemoveTagFromTaskItem_WithAssociatedTag_RemovesTagFromTaskItem()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Test Tag");
+            taskItem.Tags.Add(tag);
+            await _dbContext.SaveChangesAsync();
+
+            await _taskItemService.RemoveTagFromTaskItemAsync(taskItem.Id, tag.Id);
+
+            TaskItem updatedTaskItem = await _dbContext.TaskItems
+                .Include(currentTask => currentTask.Tags)
+                .SingleAsync(currentTask => currentTask.Id == taskItem.Id);
+
+            Assert.DoesNotContain(updatedTaskItem.Tags, currentTag => currentTag.Id == tag.Id);
+        }
+
+        [Fact]
+        public async Task RemoveTagFromTaskItem_WithTaskItemThatDoesNotHaveTag_ThrowsBadRequestException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Unassociated Tag");
+
+            await Assert.ThrowsAsync<BadRequestException>(async () =>
+            {
+                await _taskItemService.RemoveTagFromTaskItemAsync(taskItem.Id, tag.Id);
+            });
+        }
+
+        [Fact]
+        public async Task RemoveTagFromTaskItem_WithInvalidTaskItemId_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Test Tag");
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.RemoveTagFromTaskItemAsync(9999, tag.Id);
+            });
+        }
+
+        [Fact]
+        public async Task RemoveTagFromTaskItem_WithInvalidTagId_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(_dbContext);
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.RemoveTagFromTaskItemAsync(taskItem.Id, 9999);
+            });
+        }
+
+        [Fact]
+        public async Task RemoveTagFromTaskItem_WithDifferentUsersTaskItem_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(
+                _dbContext,
+                "currentuser",
+                "currentuser@example.com");
+            User otherUser = await TestDataHelper.SeedTestUserAsync(
+                _dbContext,
+                "otheruser",
+                "otheruser@example.com");
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, otherUser.Id, "Other User Task");
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, user.Id, "Test Tag");
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.RemoveTagFromTaskItemAsync(taskItem.Id, tag.Id);
+            });
+        }
+
+        [Fact]
+        public async Task RemoveTagFromTaskItem_WithDifferentUsersTag_ThrowsNotFoundException()
+        {
+            User user = await TestDataHelper.SeedTestUserAsync(
+                _dbContext,
+                "currentuser",
+                "currentuser@example.com");
+            User otherUser = await TestDataHelper.SeedTestUserAsync(
+                _dbContext,
+                "otheruser",
+                "otheruser@example.com");
+
+            TestDataHelper.SetHttpContextUser(_httpContextAccessor, user.Id);
+
+            TaskItem taskItem = await TestDataHelper.SeedTaskItemAsync(_dbContext, user.Id, "Test Task");
+            Tag tag = await TestDataHelper.SeedTagAsync(_dbContext, otherUser.Id, "Other User Tag");
+
+            await Assert.ThrowsAsync<NotFoundException>(async () =>
+            {
+                await _taskItemService.RemoveTagFromTaskItemAsync(taskItem.Id, tag.Id);
+            });
+        }
     }
 }

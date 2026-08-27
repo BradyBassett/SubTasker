@@ -101,6 +101,11 @@ namespace SubTaskerBackend.Services
             ICollection<Tag> tags = new List<Tag>();
             if (taskItemDto.TagIds.Any())
             {
+                if (taskItemDto.TagIds.Count != taskItemDto.TagIds.Distinct().Count())
+                {
+                    throw new BadRequestException("Duplicate tag IDs are not allowed.");
+                }
+
                 tags = await _dbContext.Tags
                     .Where(t => taskItemDto.TagIds.Contains(t.Id) && t.UserId == userId)
                     .ToListAsync();
@@ -108,11 +113,6 @@ namespace SubTaskerBackend.Services
                 if (tags.Count != taskItemDto.TagIds.Count)
                 {
                     throw new NotFoundException("One or more tag IDs are invalid.");
-                }
-
-                if (taskItemDto.TagIds.Count != taskItemDto.TagIds.Distinct().Count())
-                {
-                    throw new BadRequestException("Duplicate tag IDs are not allowed.");
                 }
             }
 
