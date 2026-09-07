@@ -7,13 +7,13 @@ using SubTaskerBackend.Tests.Api.Helpers;
 
 namespace SubTaskerBackend.Tests.Api
 {
-    public class UserApiTest : IClassFixture<ApiTestFactory>, IAsyncLifetime
+    public class UserApiTests : IClassFixture<ApiTestFactory>, IAsyncLifetime
     {
         private readonly ApiTestFactory _factory;
 
         private readonly HttpClient _client;
 
-        public UserApiTest(ApiTestFactory factory)
+        public UserApiTests(ApiTestFactory factory)
         {
             _factory = factory;
             _client = _factory.CreateClient();
@@ -33,16 +33,9 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task GetCurrentUser_WithAuthenticatedUser_Returns200OkAndCurrentUsersDto()
         {
-            User user = await ApiTestDataHelper.SeedTestUserAsync(
-                "user1",
-                "user1@mail.com",
-                "Password123!",
-                _factory);
+            User user = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
 
-            await ApiTestDataHelper.AuthenticateClientAsync(
-                _client,
-                "user1@mail.com",
-                "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.GetAsync("/api/user/me");
             UserReadDto? currentUser = await response.Content.ReadFromJsonAsync<UserReadDto>();
@@ -65,16 +58,9 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task GetUserById_WithCurrentUsersId_Returns200OkAndCurrentUsersDto()
         {
-            User user = await ApiTestDataHelper.SeedTestUserAsync(
-                "user1",
-                "user1@mail.com",
-                "Password123!",
-                _factory);
+            User user = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
 
-            await ApiTestDataHelper.AuthenticateClientAsync(
-                _client,
-                "user1@mail.com",
-                "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.GetAsync($"/api/user/{user.Id}");
             UserReadDto? currentUser = await response.Content.ReadFromJsonAsync<UserReadDto>();
@@ -97,22 +83,12 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task GetUserById_WithAnotherUsersId_Returns404NotFound()
         {
-            User user1 = await ApiTestDataHelper.SeedTestUserAsync(
-                "user1",
-                "user1@mail.com",
-                "Password123!",
-                _factory);
+            User user1 = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
 
-            User user2 = await ApiTestDataHelper.SeedTestUserAsync(
-                "user2",
-                "user2@mail.com",
-                "Password123!",
-                _factory);
+            User user2 = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user2", "user2@mail.com", "Password123!"
+                );
 
-            await ApiTestDataHelper.AuthenticateClientAsync(
-                _client,
-                "user1@mail.com",
-                "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.GetAsync($"/api/user/{user2.Id}");
 
@@ -122,18 +98,12 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task GetCurrentUser_WhenAuthenticatedUserWasDeleted_Returns404NotFound()
         {
-            User user = await ApiTestDataHelper.SeedTestUserAsync(
-                "user1",
-                "user1@mail.com",
-                "Password123!",
-                _factory);
+            User user = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!"
+                );
 
-            await ApiTestDataHelper.AuthenticateClientAsync(
-                _client,
-                "user1@mail.com",
-                "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
-            await ApiTestDataHelper.DeleteTestUserAsync(user.Id, _factory);
+            await ApiTestDataHelper.DeleteTestUserAsync(_factory, user.Id);
 
             HttpResponseMessage response = await _client.GetAsync($"/api/user/{user.Id}");
 

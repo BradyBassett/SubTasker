@@ -43,14 +43,14 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task GetAllCategories_WithAuth_ReturnsOnlyCurrentUsersCategories()
         {
-            User currentUser = await ApiTestDataHelper.SeedTestUserAsync("user1", "user1@mail.com", "Password123!", _factory);
-            User otherUser = await ApiTestDataHelper.SeedTestUserAsync("user2", "user2@mail.com", "Password123!", _factory);
+            User currentUser = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
+            User otherUser = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user2", "user2@mail.com", "Password123!");
 
             await SeedCategoryAsync(currentUser.Id, "Work");
             await SeedCategoryAsync(currentUser.Id, "Admin");
             await SeedCategoryAsync(otherUser.Id, "Personal");
 
-            await AuthenticateClientAsync("user1@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.GetAsync("/api/category");
             List<CategoryReadDto>? categories = await response.Content.ReadFromJsonAsync<List<CategoryReadDto>>();
@@ -65,10 +65,10 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task GetCategoryById_WithOwnedCategory_Returns200Ok()
         {
-            User user = await ApiTestDataHelper.SeedTestUserAsync("user1", "user1@mail.com", "Password123!", _factory);
+            User user = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
             Category category = await SeedCategoryAsync(user.Id, "Work");
 
-            await AuthenticateClientAsync("user1@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.GetAsync($"/api/category/{category.Id}");
             CategoryReadDto? dto = await response.Content.ReadFromJsonAsync<CategoryReadDto>();
@@ -83,11 +83,11 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task GetCategoryById_WithDifferentUsersCategory_Returns404NotFound()
         {
-            User owner = await ApiTestDataHelper.SeedTestUserAsync("owner", "owner@mail.com", "Password123!", _factory);
-            await ApiTestDataHelper.SeedTestUserAsync("requester", "requester@mail.com", "Password123!", _factory);
+            User owner = await ApiTestDataHelper.SeedTestUserAsync(_factory, "owner", "owner@mail.com", "Password123!");
+            await ApiTestDataHelper.SeedTestUserAsync(_factory, "requester", "requester@mail.com", "Password123!");
             Category category = await SeedCategoryAsync(owner.Id, "Private");
 
-            await AuthenticateClientAsync("requester@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "requester@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.GetAsync($"/api/category/{category.Id}");
             ProblemDetails? problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
@@ -101,8 +101,8 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task CreateCategory_WithValidDto_Returns201Created()
         {
-            await ApiTestDataHelper.SeedTestUserAsync("user1", "user1@mail.com", "Password123!", _factory);
-            await AuthenticateClientAsync("user1@mail.com", "Password123!");
+            await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             CategoryWriteDto dto = new CategoryWriteDto { Name = "  Work  " };
 
@@ -120,10 +120,10 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task CreateCategory_WithDuplicateNameForSameUser_Returns409Conflict()
         {
-            User user = await ApiTestDataHelper.SeedTestUserAsync("user1", "user1@mail.com", "Password123!", _factory);
+            User user = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
             await SeedCategoryAsync(user.Id, "Work");
 
-            await AuthenticateClientAsync("user1@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.PostAsJsonAsync("/api/category", new CategoryWriteDto { Name = "Work" });
             ProblemDetails? problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
@@ -137,11 +137,11 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task CreateCategory_WithDuplicateNameForDifferentUser_Returns201Created()
         {
-            User owner = await ApiTestDataHelper.SeedTestUserAsync("owner", "owner@mail.com", "Password123!", _factory);
-            await ApiTestDataHelper.SeedTestUserAsync("requester", "requester@mail.com", "Password123!", _factory);
+            User owner = await ApiTestDataHelper.SeedTestUserAsync(_factory, "owner", "owner@mail.com", "Password123!");
+            await ApiTestDataHelper.SeedTestUserAsync(_factory, "requester", "requester@mail.com", "Password123!");
             await SeedCategoryAsync(owner.Id, "Work");
 
-            await AuthenticateClientAsync("requester@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "requester@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.PostAsJsonAsync("/api/category", new CategoryWriteDto { Name = "Work" });
             CategoryReadDto? created = await response.Content.ReadFromJsonAsync<CategoryReadDto>();
@@ -155,10 +155,10 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task UpdateCategory_WithValidDto_Returns200Ok()
         {
-            User user = await ApiTestDataHelper.SeedTestUserAsync("user1", "user1@mail.com", "Password123!", _factory);
+            User user = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
             Category category = await SeedCategoryAsync(user.Id, "Old Name");
 
-            await AuthenticateClientAsync("user1@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.PatchAsJsonAsync($"/api/category/{category.Id}", new CategoryWriteDto { Name = "  New Name  " });
             CategoryReadDto? updated = await response.Content.ReadFromJsonAsync<CategoryReadDto>();
@@ -172,10 +172,10 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task DeleteCategory_WithOwnedCategory_Returns204NoContent()
         {
-            User user = await ApiTestDataHelper.SeedTestUserAsync("user1", "user1@mail.com", "Password123!", _factory);
+            User user = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
             Category category = await SeedCategoryAsync(user.Id, "Work");
 
-            await AuthenticateClientAsync("user1@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.DeleteAsync($"/api/category/{category.Id}");
 
@@ -185,12 +185,6 @@ namespace SubTaskerBackend.Tests.Api
             Category? deleted = await verifyDb.Categories.FindAsync(category.Id);
             Assert.Null(deleted);
         }
-
-        private async Task AuthenticateClientAsync(string email, string password)
-        {
-            await ApiTestDataHelper.AuthenticateClientAsync(_client, email, password);
-        }
-
         private async Task<Category> SeedCategoryAsync(int userId, string name)
         {
             await using SubTaskerEfCoreDbContext dbContext = _factory.CreateDbContext();

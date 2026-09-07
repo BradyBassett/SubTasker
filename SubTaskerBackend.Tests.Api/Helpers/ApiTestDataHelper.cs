@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using SubTaskerBackend.Data;
 using SubTaskerBackend.DTOs.Users;
 using SubTaskerBackend.Models;
 using SubTaskerBackend.Tests.Api.Fixtures;
@@ -9,10 +10,9 @@ namespace SubTaskerBackend.Tests.Api.Helpers
 {
     public static class ApiTestDataHelper
     {
-        public static async Task<User> SeedTestUserAsync(string username, string email, string password, ApiTestFactory factory)
+        public static async Task<User> SeedTestUserAsync(ApiTestFactory factory, string username, string email, string password)
         {
             var dbContext = factory.CreateDbContext();
-            await using var _ = dbContext;
 
             User user = new User
             {
@@ -29,10 +29,9 @@ namespace SubTaskerBackend.Tests.Api.Helpers
             return user;
         }
 
-        public static async Task DeleteTestUserAsync(int userId, ApiTestFactory factory)
+        public static async Task DeleteTestUserAsync(ApiTestFactory factory, int userId)
         {
             var dbContext = factory.CreateDbContext();
-            await using var _ = dbContext;
 
             User? user = await dbContext.Users.FindAsync(userId);
             if (user != null)
@@ -62,6 +61,39 @@ namespace SubTaskerBackend.Tests.Api.Helpers
 
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", login.Token);
+        }
+
+        public static async Task<Tag> SeedTagAsync(ApiTestFactory factory, int userId, string name)
+        {
+            var dbContext = factory.CreateDbContext();
+
+            Tag tag = new Tag
+            {
+                Name = name,
+                UserId = userId
+            };
+
+            dbContext.Tags.Add(tag);
+            await dbContext.SaveChangesAsync();
+
+            return tag;
+        }
+
+        public static async Task<TaskItem> SeedTaskItemAsync(ApiTestFactory factory,int userId, string title, DateTime? dueDate = null)
+        {
+            var dbContext = factory.CreateDbContext();
+
+            TaskItem taskItem = new TaskItem
+            {
+                Title = title,
+                UserId = userId,
+                DueDate = dueDate
+            };
+
+            dbContext.TaskItems.Add(taskItem);
+            await dbContext.SaveChangesAsync();
+
+            return taskItem;
         }
     }
 }

@@ -42,14 +42,14 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task GetAllTags_WithAuth_ReturnsOnlyCurrentUsersTags()
         {
-            User currentUser = await ApiTestDataHelper.SeedTestUserAsync("user1", "user1@mail.com", "Password123!", _factory);
-            User otherUser = await ApiTestDataHelper.SeedTestUserAsync("user2", "user2@mail.com", "Password123!", _factory);
+            User currentUser = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
+            User otherUser = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user2", "user2@mail.com", "Password123!");
 
-            await SeedTagAsync(currentUser.Id, "Urgent");
-            await SeedTagAsync(currentUser.Id, "Backend");
-            await SeedTagAsync(otherUser.Id, "Frontend");
+            await ApiTestDataHelper.SeedTagAsync(_factory, currentUser.Id, "Urgent");
+            await ApiTestDataHelper.SeedTagAsync(_factory, currentUser.Id, "Backend");
+            await ApiTestDataHelper.SeedTagAsync(_factory, otherUser.Id, "Frontend");
 
-            await AuthenticateClientAsync("user1@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.GetAsync("/api/tag");
             List<TagReadDto>? tags = await response.Content.ReadFromJsonAsync<List<TagReadDto>>();
@@ -64,10 +64,10 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task GetTagById_WithOwnedTag_Returns200Ok()
         {
-            User user = await ApiTestDataHelper.SeedTestUserAsync("user1", "user1@mail.com", "Password123!", _factory);
-            Tag tag = await SeedTagAsync(user.Id, "Urgent");
+            User user = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
+            Tag tag = await ApiTestDataHelper.SeedTagAsync(_factory, user.Id, "Urgent");
 
-            await AuthenticateClientAsync("user1@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.GetAsync($"/api/tag/{tag.Id}");
             TagReadDto? dto = await response.Content.ReadFromJsonAsync<TagReadDto>();
@@ -82,11 +82,11 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task GetTagById_WithDifferentUsersTag_Returns404NotFound()
         {
-            User owner = await ApiTestDataHelper.SeedTestUserAsync("owner", "owner@mail.com", "Password123!", _factory);
-            await ApiTestDataHelper.SeedTestUserAsync("requester", "requester@mail.com", "Password123!", _factory);
-            Tag tag = await SeedTagAsync(owner.Id, "Private");
+            User owner = await ApiTestDataHelper.SeedTestUserAsync(_factory, "owner", "owner@mail.com", "Password123!");
+            await ApiTestDataHelper.SeedTestUserAsync(_factory, "requester", "requester@mail.com", "Password123!");
+            Tag tag = await ApiTestDataHelper.SeedTagAsync(_factory, owner.Id, "Private");
 
-            await AuthenticateClientAsync("requester@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "requester@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.GetAsync($"/api/tag/{tag.Id}");
             ProblemDetails? problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
@@ -100,8 +100,8 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task CreateTag_WithValidDto_Returns201Created()
         {
-            await ApiTestDataHelper.SeedTestUserAsync("user1", "user1@mail.com", "Password123!", _factory);
-            await AuthenticateClientAsync("user1@mail.com", "Password123!");
+            await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             TagWriteDto dto = new TagWriteDto { Name = "  Urgent  " };
 
@@ -119,10 +119,10 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task CreateTag_WithDuplicateNameForSameUser_Returns409Conflict()
         {
-            User user = await ApiTestDataHelper.SeedTestUserAsync("user1", "user1@mail.com", "Password123!", _factory);
-            await SeedTagAsync(user.Id, "Urgent");
+            User user = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
+            await ApiTestDataHelper.SeedTagAsync(_factory, user.Id, "Urgent");
 
-            await AuthenticateClientAsync("user1@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.PostAsJsonAsync("/api/tag", new TagWriteDto { Name = "Urgent" });
             ProblemDetails? problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
@@ -136,11 +136,11 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task CreateTag_WithDuplicateNameForDifferentUser_Returns201Created()
         {
-            User owner = await ApiTestDataHelper.SeedTestUserAsync("owner", "owner@mail.com", "Password123!", _factory);
-            await ApiTestDataHelper.SeedTestUserAsync("requester", "requester@mail.com", "Password123!", _factory);
-            await SeedTagAsync(owner.Id, "Urgent");
+            User owner = await ApiTestDataHelper.SeedTestUserAsync(_factory, "owner", "owner@mail.com", "Password123!");
+            await ApiTestDataHelper.SeedTestUserAsync(_factory, "requester", "requester@mail.com", "Password123!");
+            await ApiTestDataHelper.SeedTagAsync(_factory, owner.Id, "Urgent");
 
-            await AuthenticateClientAsync("requester@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "requester@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.PostAsJsonAsync("/api/tag", new TagWriteDto { Name = "Urgent" });
             TagReadDto? created = await response.Content.ReadFromJsonAsync<TagReadDto>();
@@ -154,10 +154,10 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task UpdateTag_WithValidDto_Returns200Ok()
         {
-            User user = await ApiTestDataHelper.SeedTestUserAsync("user1", "user1@mail.com", "Password123!", _factory);
-            Tag tag = await SeedTagAsync(user.Id, "Old Name");
+            User user = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
+            Tag tag = await ApiTestDataHelper.SeedTagAsync(_factory, user.Id, "Old Name");
 
-            await AuthenticateClientAsync("user1@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.PatchAsJsonAsync($"/api/tag/{tag.Id}", new TagWriteDto { Name = "  New Name  " });
             TagReadDto? updated = await response.Content.ReadFromJsonAsync<TagReadDto>();
@@ -171,10 +171,10 @@ namespace SubTaskerBackend.Tests.Api
         [Fact]
         public async Task DeleteTag_WithOwnedTag_Returns204NoContent()
         {
-            User user = await ApiTestDataHelper.SeedTestUserAsync("user1", "user1@mail.com", "Password123!", _factory);
-            Tag tag = await SeedTagAsync(user.Id, "Urgent");
+            User user = await ApiTestDataHelper.SeedTestUserAsync(_factory, "user1", "user1@mail.com", "Password123!");
+            Tag tag = await ApiTestDataHelper.SeedTagAsync(_factory, user.Id, "Urgent");
 
-            await AuthenticateClientAsync("user1@mail.com", "Password123!");
+            await ApiTestDataHelper.AuthenticateClientAsync(_client, "user1@mail.com", "Password123!");
 
             HttpResponseMessage response = await _client.DeleteAsync($"/api/tag/{tag.Id}");
 
@@ -183,27 +183,6 @@ namespace SubTaskerBackend.Tests.Api
             await using SubTaskerEfCoreDbContext verifyDb = _factory.CreateDbContext();
             Tag? deleted = await verifyDb.Tags.FindAsync(tag.Id);
             Assert.Null(deleted);
-        }
-
-        private async Task AuthenticateClientAsync(string email, string password)
-        {
-            await ApiTestDataHelper.AuthenticateClientAsync(_client, email, password);
-        }
-
-        private async Task<Tag> SeedTagAsync(int userId, string name)
-        {
-            await using SubTaskerEfCoreDbContext dbContext = _factory.CreateDbContext();
-
-            Tag tag = new Tag
-            {
-                Name = name,
-                UserId = userId
-            };
-
-            dbContext.Tags.Add(tag);
-            await dbContext.SaveChangesAsync();
-
-            return tag;
         }
     }
 }
