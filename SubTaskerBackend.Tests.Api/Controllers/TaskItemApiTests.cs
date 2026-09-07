@@ -1,16 +1,16 @@
-using Microsoft.AspNetCore.Identity;
-using SubTaskerBackend.Models;
+
+
 using SubTaskerBackend.Tests.Api.Fixtures;
 
 namespace SubTaskerBackend.Tests.Api
 {
-    public class UserApiTest : IClassFixture<ApiTestFactory>, IAsyncLifetime
+    public class TaskItemApiTests : IClassFixture<ApiTestFactory>, IAsyncLifetime
     {
         private readonly ApiTestFactory _factory;
 
         private readonly HttpClient _client;
 
-        public UserApiTest(ApiTestFactory factory)
+        public TaskItemApiTests(ApiTestFactory factory)
         {
             _factory = factory;
             _client = _factory.CreateClient();
@@ -26,5 +26,8 @@ namespace SubTaskerBackend.Tests.Api
             _client.Dispose();
             return Task.CompletedTask;
         }
+
+        
+
     }
 }
