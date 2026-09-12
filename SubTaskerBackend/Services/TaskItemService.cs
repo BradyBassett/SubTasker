@@ -28,6 +28,7 @@ namespace SubTaskerBackend.Services
                 .Where(t => t.UserId == userId)
                 .Include(t => t.SubTasks)
                 .Include(t => t.Tags)
+                .AsSplitQuery()
                 .OrderBy(t => t.DueDate)
                 .ToListAsync();
 
@@ -57,6 +58,7 @@ namespace SubTaskerBackend.Services
             TaskItem? taskItem = await _dbContext.TaskItems
                 .Include(t => t.SubTasks)
                 .Include(t => t.Tags)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
 
             if (taskItem == null)
@@ -173,6 +175,7 @@ namespace SubTaskerBackend.Services
             TaskItem? taskItem = await _dbContext.TaskItems
                 .Include(t => t.Tags)
                 .Include(t => t.SubTasks)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
 
             if (taskItem == null)
@@ -180,7 +183,7 @@ namespace SubTaskerBackend.Services
                 throw new NotFoundException("Invalid task item ID.");
             }
 
-            if (taskItemDto.CategoryId.HasValue)
+            if (taskItemDto.CategoryIdSpecified && taskItemDto.CategoryId.HasValue)
             {
                 bool categoryExists = await _dbContext.Categories.AnyAsync(c => c.Id == taskItemDto.CategoryId.Value && c.UserId == userId);
                 if (!categoryExists)
@@ -189,7 +192,7 @@ namespace SubTaskerBackend.Services
                 }
             }
 
-            if (taskItemDto.ParentTaskId.HasValue)
+            if (taskItemDto.ParentTaskIdSpecified && taskItemDto.ParentTaskId.HasValue)
             {
                 bool parentTaskExists = await _dbContext.TaskItems.AnyAsync(t => t.Id == taskItemDto.ParentTaskId.Value && t.UserId == userId);
                 if (!parentTaskExists)
@@ -203,13 +206,35 @@ namespace SubTaskerBackend.Services
                 }
             }
 
+            if (taskItemDto.Title != null && string.IsNullOrWhiteSpace(taskItemDto.Title))
+            {
+                throw new BadRequestException("Task item title cannot be empty.");
+            }
+
             taskItem.Title = taskItemDto.Title?.Trim() ?? taskItem.Title;
-            taskItem.Description = taskItemDto.Description ?? taskItem.Description;
+
+            if (taskItemDto.DescriptionSpecified)
+            {
+                taskItem.Description = taskItemDto.Description;
+            }
+
             taskItem.Status = taskItemDto.Status ?? taskItem.Status;
             taskItem.Priority = taskItemDto.Priority ?? taskItem.Priority;
-            taskItem.DueDate = taskItemDto.DueDate ?? taskItem.DueDate;
-            taskItem.CategoryId = taskItemDto.CategoryId ?? taskItem.CategoryId;
-            taskItem.ParentTaskId = taskItemDto.ParentTaskId ?? taskItem.ParentTaskId;
+
+            if (taskItemDto.DueDateSpecified)
+            {
+                taskItem.DueDate = taskItemDto.DueDate;
+            }
+
+            if (taskItemDto.CategoryIdSpecified)
+            {
+                taskItem.CategoryId = taskItemDto.CategoryId;
+            }
+
+            if (taskItemDto.ParentTaskIdSpecified)
+            {
+                taskItem.ParentTaskId = taskItemDto.ParentTaskId;
+            }
 
             if (taskItemDto.TagIds != null)
             {
