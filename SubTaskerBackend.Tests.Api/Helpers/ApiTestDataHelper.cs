@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using SubTaskerBackend.Data;
 using SubTaskerBackend.DTOs.Users;
 using SubTaskerBackend.Models;
 using SubTaskerBackend.Tests.Api.Fixtures;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace SubTaskerBackend.Tests.Api.Helpers
 {
@@ -79,7 +82,33 @@ namespace SubTaskerBackend.Tests.Api.Helpers
             return tag;
         }
 
-        public static async Task<TaskItem> SeedTaskItemAsync(ApiTestFactory factory,int userId, string title, DateTime? dueDate = null)
+        public static async Task<Category> SeedCategoryAsync(ApiTestFactory factory, int userId, string name)
+        {
+            var dbContext = factory.CreateDbContext();
+
+            Category category = new Category
+            {
+                Name = name,
+                UserId = userId
+            };
+
+            dbContext.Categories.Add(category);
+            await dbContext.SaveChangesAsync();
+
+            return category;
+        }
+
+        public static async Task<TaskItem> SeedTaskItemAsync(
+            ApiTestFactory factory,
+            int userId,
+            string title,
+            DateTime? dueDate = null,
+            string? description = null,
+            Enums.TaskStatus status = Enums.TaskStatus.notStarted,
+            Enums.PriorityLevel priority = Enums.PriorityLevel.Medium,
+            int? categoryId = null,
+            int? parentTaskId = null,
+            List<int>? tagIds = null)
         {
             var dbContext = factory.CreateDbContext();
 
@@ -87,13 +116,30 @@ namespace SubTaskerBackend.Tests.Api.Helpers
             {
                 Title = title,
                 UserId = userId,
-                DueDate = dueDate
+                DueDate = dueDate,
+                Description = description,
+                Status = status,
+                Priority = priority,
+                CategoryId = categoryId,
+                ParentTaskId = parentTaskId
             };
+
+            if (tagIds != null)
+            {
+                taskItem.Tags = await dbContext.Tags
+                    .Where(tag => tagIds.Contains(tag.Id))
+                    .ToListAsync();
+            }
 
             dbContext.TaskItems.Add(taskItem);
             await dbContext.SaveChangesAsync();
 
             return taskItem;
         }
+
+        public static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+        {
+            Converters = { new JsonStringEnumConverter() }
+        };
     }
 }
