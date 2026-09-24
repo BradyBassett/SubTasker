@@ -52,3 +52,11 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Docker
+Dockerfile
+.dockerignore
+**/Dockerfile
+**/.dockerignore
+docker-compose.yml
+**/docker-compose.yml
