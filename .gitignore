@@ -60,3 +60,6 @@ Dockerfile
 **/.dockerignore
 docker-compose.yml
 **/docker-compose.yml
+
+# Environment variables
+*.env
