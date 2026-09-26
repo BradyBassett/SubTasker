@@ -29,6 +29,17 @@ builder.Services
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:3000", "http://localhost:3001")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -70,6 +81,8 @@ builder.Services.AddHttpContextAccessor();
 WebApplication app = builder.Build();
 
 app.UseExceptionHandler();
+
+app.UseCors("Frontend");
 
 app.UseAuthentication();
 
